@@ -17,11 +17,18 @@ app.use(cors({
     origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
         // allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
+
+        // Check explicit origins
         if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+            return callback(null, true);
         }
+
+        // Allow Vercel preview deployments dynamically
+        if (origin.endsWith('.vercel.app')) {
+            return callback(null, true);
+        }
+
+        callback(new Error('Not allowed by CORS'));
     },
     credentials: true, // Allow sending cookies/authorization headers
 }));
