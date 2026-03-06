@@ -251,12 +251,11 @@ export const Dashboard: React.FC = () => {
                                                 <td className="py-6 px-2 text-sm text-gray-500">
                                                     {(() => {
                                                         try {
-                                                            const dateStr = res.fecha.toString();
-                                                            const cleanDate = dateStr.includes('T') ? dateStr : `${dateStr}T12:00:00`;
-                                                            const d = new Date(cleanDate);
-                                                            return isNaN(d.getTime()) ? res.fecha : d.toLocaleDateString();
+                                                            const dateStr = String(res.fecha).split('T')[0];
+                                                            const [year, month, day] = dateStr.split('-');
+                                                            return `${day}/${month}/${year}`;
                                                         } catch (e) {
-                                                            return res.fecha;
+                                                            return String(res.fecha);
                                                         }
                                                     })()}
                                                 </td>
