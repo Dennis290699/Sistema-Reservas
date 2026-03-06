@@ -21,8 +21,13 @@ export const RegisterPage: React.FC = () => {
             toast.success('Cuenta creada con éxito');
             // Auto login is handled by store usually, or we redirect
             navigate('/dashboard');
-        } catch (error) {
-            toast.error('Error al registrarse. Intente nuevamente.');
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.error || 'Error al registrarse. Intente nuevamente.';
+            if (Array.isArray(errorMsg)) {
+                toast.error(errorMsg[0].message || 'Datos inválidos.');
+            } else {
+                toast.error(errorMsg);
+            }
         }
     };
 
