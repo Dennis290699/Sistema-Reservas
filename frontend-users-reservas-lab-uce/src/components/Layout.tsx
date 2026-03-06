@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { Navbar } from './Navbar';
-import { Toaster } from 'sonner';
+
 
 interface LayoutProps {
     children: ReactNode;
