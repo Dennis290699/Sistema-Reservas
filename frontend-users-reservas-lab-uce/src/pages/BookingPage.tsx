@@ -120,16 +120,19 @@ export const BookingPage: React.FC = () => {
 
         } catch (err: any) {
             console.error(err);
-            const errorMsg = err.response?.data?.error || 'Error al procesar la reserva';
+            const errorData = err.response?.data?.error;
+            let errorMsg = 'Error al procesar la reserva';
 
-            if (typeof errorMsg === 'string') {
-                toast.error(errorMsg);
-            } else if (Array.isArray(errorMsg)) {
+            if (typeof errorData === 'string') {
+                errorMsg = errorData;
+            } else if (Array.isArray(errorData)) {
                 // Zod errors
-                toast.error('Datos inválidos. Verifique su selección.');
-            } else {
-                toast.error('Error desconocido al reservar.');
+                errorMsg = errorData.map((e: any) => e.message || e.path?.join('.') + ' is invalid').join(', ');
+            } else if (errorData?.message) {
+                errorMsg = errorData.message;
             }
+
+            toast.error(errorMsg);
         } finally {
             setBookingLoading(false);
         }
