@@ -30,17 +30,16 @@ export const Dashboard: React.FC = () => {
             ]);
             setLabs(labsRes.data);
 
-            // Sort reservations: Newest first (descending date, then descending time)
+            // Sort reservations: Newest first
             const sortedReservations = reservationsRes.data.sort((a: ReservationWithLab, b: ReservationWithLab) => {
-                const dateAStr = typeof a.fecha === 'string' ? a.fecha.split('T')[0] : String(a.fecha);
-                const dateBStr = typeof b.fecha === 'string' ? b.fecha.split('T')[0] : String(b.fecha);
-                const dateA = new Date(dateAStr + 'T12:00:00').getTime();
-                const dateB = new Date(dateBStr + 'T12:00:00').getTime();
+                const dateAStr = String(a.fecha).split('T')[0];
+                const dateBStr = String(b.fecha).split('T')[0];
 
-                // fallback to 0 if NaN to avoid array sort crashes
-                if (isNaN(dateA) || isNaN(dateB)) return 0;
+                // Compare strings alphabetically (YYYY-MM-DD format allows this safely)
+                if (dateAStr > dateBStr) return -1;
+                if (dateAStr < dateBStr) return 1;
 
-                if (dateB !== dateA) return dateB - dateA;
+                // If same day, order by newest time first
                 return b.hora_inicio - a.hora_inicio;
             });
             setReservations(sortedReservations);
@@ -120,9 +119,13 @@ export const Dashboard: React.FC = () => {
                 ids: g.ids
             };
         }).sort((a, b) => {
-            const dateA = new Date(a.fecha.toString().split('T')[0] + 'T12:00:00').getTime();
-            const dateB = new Date(b.fecha.toString().split('T')[0] + 'T12:00:00').getTime();
-            if (dateB !== dateA) return dateB - dateA;
+            const dateAStr = String(a.fecha).split('T')[0];
+            const dateBStr = String(b.fecha).split('T')[0];
+
+            // Compare strings alphabetically (YYYY-MM-DD format allows this safely)
+            if (dateAStr > dateBStr) return -1;
+            if (dateAStr < dateBStr) return 1;
+
             return 0;
         });
     })();

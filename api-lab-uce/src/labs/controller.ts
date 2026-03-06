@@ -97,7 +97,7 @@ export const getUserReservations = async (req: Request, res: Response) => {
                 if (res.fecha instanceof Date) {
                     resDate = new Date(res.fecha.getFullYear(), res.fecha.getMonth(), res.fecha.getDate());
                 } else {
-                    const cleanDateStr = (res.fecha as string).split('T')[0];
+                    const cleanDateStr = String(res.fecha).split('T')[0];
                     const parts = cleanDateStr.split('-');
                     resDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
                 }
@@ -138,7 +138,7 @@ export const getAllReservations = async (req: Request, res: Response) => {
                 if (res.fecha instanceof Date) {
                     resDate = new Date(res.fecha.getFullYear(), res.fecha.getMonth(), res.fecha.getDate());
                 } else {
-                    const cleanDateStr = (res.fecha as string).split('T')[0];
+                    const cleanDateStr = String(res.fecha).split('T')[0];
                     const parts = cleanDateStr.split('-');
                     resDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
                 }
