@@ -86,8 +86,9 @@ export const getUserReservations = async (req: Request, res: Response) => {
     try {
         const reservations = await import('./db').then(m => m.getReservationsByUser(userId));
 
-        // Calculate status for each reservation
-        const now = new Date();
+        // Calculate status for each reservation based on local Ecuador time
+        const nowStr = new Date().toLocaleString("en-US", { timeZone: "America/Guayaquil" });
+        const now = new Date(nowStr);
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         const reservationsWithStatus = reservations.map((res: any) => {
@@ -127,8 +128,9 @@ export const getAllReservations = async (req: Request, res: Response) => {
     try {
         const reservations = await import('./db').then(m => m.getAllReservations());
 
-        // Calculate status for each reservation
-        const now = new Date();
+        // Calculate status for each reservation based on local Ecuador time
+        const nowStr = new Date().toLocaleString("en-US", { timeZone: "America/Guayaquil" });
+        const now = new Date(nowStr);
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         const reservationsWithStatus = reservations.map((res: any) => {
