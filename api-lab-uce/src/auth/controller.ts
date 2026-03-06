@@ -64,11 +64,18 @@ export const register = async (req: Request, res: Response) => {
         // Default role is 'student'
         const user = await createUser(full_name, email, hash, 'student');
 
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
         res.status(201).json({
             id: user.id,
             full_name: user.full_name,
             email: user.email,
-            role: user.role
+            role: user.role,
+            token
         });
     } catch (e) {
         console.error('Register error:', e);

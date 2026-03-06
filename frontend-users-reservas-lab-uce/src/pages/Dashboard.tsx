@@ -32,8 +32,14 @@ export const Dashboard: React.FC = () => {
 
             // Sort reservations: Newest first (descending date, then descending time)
             const sortedReservations = reservationsRes.data.sort((a: ReservationWithLab, b: ReservationWithLab) => {
-                const dateA = new Date(a.fecha + 'T12:00:00').getTime();
-                const dateB = new Date(b.fecha + 'T12:00:00').getTime();
+                const dateAStr = typeof a.fecha === 'string' ? a.fecha.split('T')[0] : String(a.fecha);
+                const dateBStr = typeof b.fecha === 'string' ? b.fecha.split('T')[0] : String(b.fecha);
+                const dateA = new Date(dateAStr + 'T12:00:00').getTime();
+                const dateB = new Date(dateBStr + 'T12:00:00').getTime();
+
+                // fallback to 0 if NaN to avoid array sort crashes
+                if (isNaN(dateA) || isNaN(dateB)) return 0;
+
                 if (dateB !== dateA) return dateB - dateA;
                 return b.hora_inicio - a.hora_inicio;
             });
