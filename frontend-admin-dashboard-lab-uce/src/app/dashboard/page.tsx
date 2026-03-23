@@ -5,8 +5,10 @@ import { TopHeader } from "@/components/dashboard/TopHeader";
 import { LabService, Lab, Reservation } from "@/services/lab.service";
 import { AuthService } from "@/services/auth.service";
 import { motion, Variants } from "framer-motion";
-import { Calendar, MonitorPlay, Activity, Clock, Layers } from "lucide-react";
+import { Calendar, MonitorPlay, Activity, Clock, Layers, Users, CheckCircle, Eye, Edit } from "lucide-react";
 import { toast } from "sonner";
+import { useNotificationStore } from "@/store/notificationsStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function InicioPage() {
     const [labs, setLabs] = useState<Lab[]>([]);
@@ -15,6 +17,13 @@ export default function InicioPage() {
     const [recentUpcoming, setRecentUpcoming] = useState<Reservation[]>([]);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [adminName, setAdminName] = useState("Administrador");
+
+    // Modal States
+    const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+    const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [rescheduleTime, setRescheduleTime] = useState<number>(7);
 
     const fetchDashboardData = async (silent = false) => {
         try {
@@ -54,8 +63,25 @@ export default function InicioPage() {
             setActiveReservations(upcoming.length);
             setRecentUpcoming(sortedUpcoming.slice(0, 5));
 
-            if (isInitialLoading) {
+            // Zustand Notification Logic
+            if (!silent) {
+                // Initial load: Seed the store and clear unread count
+                useNotificationStore.getState().addNotifications(reservationsData);
+                useNotificationStore.getState().clearUnread();
                 setIsInitialLoading(false);
+            } else {
+                // Silent background polling: Check for new items
+                const store = useNotificationStore.getState();
+                const previousCount = store.unreadCount;
+                store.addNotifications(reservationsData);
+                const newCount = useNotificationStore.getState().unreadCount;
+                
+                if (newCount > previousCount) {
+                    const diff = newCount - previousCount;
+                    toast.success(`Tienes ${diff} ${diff === 1 ? 'nueva reserva' : 'nuevas reservas'}`, {
+                        description: "Revisa la campanita para más detalles."
+                    });
+                }
             }
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
@@ -65,6 +91,19 @@ export default function InicioPage() {
                 });
                 setIsInitialLoading(false);
             }
+        }
+    };
+
+    const handleRescheduleSubmit = async () => {
+        if (!selectedReservation || !rescheduleDate || !rescheduleTime) return;
+        
+        try {
+            await LabService.rescheduleReservation(selectedReservation.id, rescheduleDate, Number(rescheduleTime));
+            toast.success("Reserva modificada exitosamente.");
+            setRescheduleModalOpen(false);
+            fetchDashboardData(true); // background silent refresh
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Error al intentar reagendar. Comprueba que el horario esté libre.");
         }
     };
 
@@ -110,7 +149,7 @@ export default function InicioPage() {
             <TopHeader />
 
             <div className="flex flex-1 overflow-hidden pb-4">
-                <div className="flex-1 overflow-y-auto h-full rounded-3xl bg-[#0D1310] border border-[#1C2721] p-8 shadow-xl">
+                <div className="flex-1 overflow-y-auto no-scrollbar h-full rounded-3xl bg-[#0D1310] border border-[#1C2721] p-8 shadow-xl">
                     
                     {/* Welcome Banner */}
                     <motion.div 
@@ -120,10 +159,9 @@ export default function InicioPage() {
                         className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 pb-6 border-b border-[#1C2721]"
                     >
                         <div>
-                            <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Hola, {adminName} <span className="text-[#D3FB52]">👋</span></h1>
                             <p className="text-zinc-400 font-light flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-zinc-500" /> 
-                                <span className="capitalize">{currentDate}</span>
+                                <Calendar className="w-5 h-5 text-[#D3FB52]" /> 
+                                <span className="capitalize text-lg text-white font-medium">{currentDate}</span>
                             </p>
                         </div>
                         <div className="mt-4 md:mt-0 px-4 py-2 bg-[#141C18] border border-[#2A3B32] rounded-full flex items-center gap-3">
@@ -150,36 +188,41 @@ export default function InicioPage() {
                         >
                             {/* Stats Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <motion.div variants={itemVariants} className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-colors">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-zinc-400 font-medium">Lanzamientos</h3>
-                                        <MonitorPlay className="text-zinc-600 group-hover:text-white transition-colors w-5 h-5" />
+                                <button className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#D3FB52]/50 transition-all hover:translate-y-[-2px] text-left">
+                                    <div className="flex items-center justify-between mb-4 w-full">
+                                        <div className="p-3 bg-[#0D1310] rounded-xl border border-[#2A3B32] group-hover:border-[#D3FB52]/30 transition-colors">
+                                            <CheckCircle className="text-[#D3FB52] w-6 h-6" />
+                                        </div>
                                     </div>
-                                    <p className="text-4xl font-bold text-white flex items-end gap-2">
-                                        {labs.length} <span className="text-sm font-normal text-zinc-500 mb-1">Laboratorios</span>
-                                    </p>
-                                </motion.div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-[#D3FB52] transition-colors">Revisar Reservas</h3>
+                                        <p className="text-sm font-normal text-zinc-500 line-clamp-2">Gestionar y supervisar {activeReservations} reservas entrantes</p>
+                                    </div>
+                                </button>
 
-                                <motion.div variants={itemVariants} className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#D3FB52]/30 transition-colors relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#D3FB52]/5 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-                                    <div className="flex items-center justify-between mb-4 relative z-10">
-                                        <h3 className="text-[#D3FB52] font-medium">Próximas Reservas</h3>
-                                        <Activity className="text-[#D3FB52]/70 group-hover:text-[#D3FB52] transition-colors w-5 h-5" />
+                                <button className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-all hover:translate-y-[-2px] text-left">
+                                    <div className="flex items-center justify-between mb-4 w-full">
+                                        <div className="p-3 bg-[#0D1310] rounded-xl border border-[#2A3B32]">
+                                            <MonitorPlay className="text-zinc-400 group-hover:text-white transition-colors w-6 h-6" />
+                                        </div>
                                     </div>
-                                    <p className="text-4xl font-bold text-[#D3FB52] relative z-10 flex items-end gap-2">
-                                        {activeReservations} <span className="text-sm font-normal text-[#D3FB52]/60 mb-1">Activas</span>
-                                    </p>
-                                </motion.div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white mb-1">Laboratorios</h3>
+                                        <p className="text-sm font-normal text-zinc-500 line-clamp-2">Administrar {labs.length} laboratorios y su equipamiento</p>
+                                    </div>
+                                </button>
 
-                                <motion.div variants={itemVariants} className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-colors">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-zinc-400 font-medium">Volumen Histórico</h3>
-                                        <Layers className="text-zinc-600 group-hover:text-white transition-colors w-5 h-5" />
+                                <button className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-all hover:translate-y-[-2px] text-left">
+                                    <div className="flex items-center justify-between mb-4 w-full">
+                                        <div className="p-3 bg-[#0D1310] rounded-xl border border-[#2A3B32]">
+                                            <Users className="text-zinc-400 group-hover:text-white transition-colors w-6 h-6" />
+                                        </div>
                                     </div>
-                                    <p className="text-4xl font-bold text-white flex items-end gap-2">
-                                        {reservations.length} <span className="text-sm font-normal text-zinc-500 mb-1">Totales</span>
-                                    </p>
-                                </motion.div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white mb-1">Directorio Usuarios</h3>
+                                        <p className="text-sm font-normal text-zinc-500 line-clamp-2">Administrar accesos, roles y cuentas del alumnado</p>
+                                    </div>
+                                </button>
                             </div>
 
                             {/* Recent Activity Table */}
@@ -209,6 +252,7 @@ export default function InicioPage() {
                                                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Materia</th>
                                                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Fecha</th>
                                                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Horario</th>
+                                                    <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest text-right">Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-[#1C2721]">
@@ -245,6 +289,32 @@ export default function InicioPage() {
                                                         <td className="px-6 py-4 whitespace-nowrap text-zinc-300 font-mono text-right">
                                                             {res.hora_inicio}:00 - {res.hora_inicio + 1}:00
                                                         </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        setSelectedReservation(res);
+                                                                        setViewModalOpen(true);
+                                                                    }}
+                                                                    className="p-2 bg-[#1C2721] hover:bg-[#2A3B32] text-zinc-400 hover:text-white rounded-lg transition-colors border border-[#2A3B32]"
+                                                                    title="Ver detalles"
+                                                                >
+                                                                    <Eye className="w-4 h-4" />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        setSelectedReservation(res);
+                                                                        setRescheduleDate(String(res.fecha).split('T')[0]);
+                                                                        setRescheduleTime(res.hora_inicio);
+                                                                        setRescheduleModalOpen(true);
+                                                                    }}
+                                                                    className="p-2 bg-[#1C2721] hover:bg-[#2A3B32] text-zinc-400 hover:text-[#D3FB52] rounded-lg transition-colors border border-[#2A3B32]"
+                                                                    title="Reagendar reserva"
+                                                                >
+                                                                    <Edit className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
                                                     </motion.tr>
                                                 ))}
                                             </tbody>
@@ -256,6 +326,98 @@ export default function InicioPage() {
                     )}
                 </div>
             </div>
+
+            {/* View Details Modal */}
+            <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+                <DialogContent className="bg-[#0D1310] border-[#1C2721] text-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2">
+                            <Eye className="w-5 h-5 text-[#D3FB52]" /> Detalles de Reserva
+                        </DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            Información completa sobre la reserva y el solicitante.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedReservation && (
+                        <div className="space-y-4 my-4">
+                            <div className="bg-[#141C18] p-4 rounded-xl border border-[#2A3B32]">
+                                <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">Información del Solicitante</h3>
+                                <div className="space-y-2">
+                                    <p className="flex justify-between"><span className="text-zinc-400">Nombre:</span> <span className="font-semibold">{selectedReservation.user_nombre || 'Desconocido'}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-400">ID Usuario:</span> <span>#{selectedReservation.user_id}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-400">ID Reserva:</span> <span className="font-mono text-[#D3FB52]">#{selectedReservation.id}</span></p>
+                                </div>
+                            </div>
+                            <div className="bg-[#141C18] p-4 rounded-xl border border-[#2A3B32]">
+                                <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">Detalles de uso</h3>
+                                <div className="space-y-2">
+                                    <p className="flex justify-between"><span className="text-zinc-400">Laboratorio:</span> <span className="font-semibold">{selectedReservation.lab_nombre || `Lab #${selectedReservation.lab_id}`}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-400">Materia:</span> <span>{selectedReservation.materia}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-400">Fecha:</span> <span>{String(selectedReservation.fecha).split('T')[0]}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-400">Horario:</span> <span>{selectedReservation.hora_inicio}:00 - {selectedReservation.hora_inicio + 1}:00</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <button onClick={() => setViewModalOpen(false)} className="px-4 py-2 bg-[#1C2721] hover:bg-[#2A3B32] text-white rounded-lg transition-colors border border-[#2A3B32]">
+                            Cerrar
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Reschedule Modal */}
+            <Dialog open={rescheduleModalOpen} onOpenChange={setRescheduleModalOpen}>
+                <DialogContent className="bg-[#0D1310] border-[#1C2721] text-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2">
+                            <Edit className="w-5 h-5 text-[#D3FB52]" /> Reagendar Reserva
+                        </DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            Modifica la fecha y hora de la reserva actual.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedReservation && (
+                        <div className="space-y-4 my-4">
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                <p className="text-xs text-red-400">Asegúrate de coordinar este cambio con el alumno previamente para evitar conflictos de horario.</p>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                <label className="block text-sm font-medium text-zinc-300">Nueva Fecha</label>
+                                <input 
+                                    type="date" 
+                                    value={rescheduleDate}
+                                    onChange={(e) => setRescheduleDate(e.target.value)}
+                                    className="w-full bg-[#141C18] border border-[#2A3B32] p-3 rounded-lg text-white outline-none focus:border-[#D3FB52] transition-colors"
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="block text-sm font-medium text-zinc-300">Nueva Hora de Inicio</label>
+                                <select 
+                                    value={rescheduleTime}
+                                    onChange={(e) => setRescheduleTime(Number(e.target.value))}
+                                    className="w-full bg-[#141C18] border border-[#2A3B32] p-3 rounded-lg text-white outline-none focus:border-[#D3FB52] transition-colors"
+                                >
+                                    {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(h => (
+                                        <option key={h} value={h}>{h}:00</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <button onClick={() => setRescheduleModalOpen(false)} className="px-4 py-2 bg-transparent text-zinc-400 hover:text-white transition-colors">
+                            Cancelar
+                        </button>
+                        <button onClick={handleRescheduleSubmit} className="px-4 py-2 bg-[#D3FB52] hover:bg-[#bceb3b] text-black font-semibold rounded-lg transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

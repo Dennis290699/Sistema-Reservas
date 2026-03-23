@@ -15,6 +15,8 @@ export interface Reservation {
     hora_inicio: number;
     materia: string;
     creado_en: Date;
+    user_nombre?: string;
+    lab_nombre?: string;
 }
 
 export const getLabs = async (): Promise<Lab[]> => {
@@ -78,12 +80,21 @@ export const getReservationsByUser = async (userId: number): Promise<Reservation
 
 export const getAllReservations = async (): Promise<Reservation[]> => {
     const result = await pool.query(
-        `SELECT r.id, r.lab_id, r.user_id, TO_CHAR(r.fecha, 'YYYY-MM-DD') as fecha, r.hora_inicio, r.materia, r.creado_en, l.nombre as lab_nombre 
+        `SELECT r.id, r.lab_id, r.user_id, TO_CHAR(r.fecha, 'YYYY-MM-DD') as fecha, r.hora_inicio, r.materia, r.creado_en, l.nombre as lab_nombre, u.nombre as user_nombre 
          FROM reservas r 
          JOIN laboratorios l ON r.lab_id = l.id 
+         JOIN usuarios u ON r.user_id = u.id
          ORDER BY r.fecha DESC, r.hora_inicio ASC`
     );
     return result.rows;
+};
+
+export const updateReservationTime = async (id: number, fecha: string, hora_inicio: number): Promise<Reservation | null> => {
+    const result = await pool.query(
+        'UPDATE reservas SET fecha = $1, hora_inicio = $2 WHERE id = $3 RETURNING *',
+        [fecha, hora_inicio, id]
+    );
+    return result.rows[0] || null;
 };
 
 export const deleteReservation = async (id: number, userId: number): Promise<boolean> => {

@@ -16,6 +16,7 @@ export interface Reservation {
     materia: string;
     estado: string;
     lab_nombre?: string;
+    user_nombre?: string;
 }
 
 export interface AvailabilityRequest {
@@ -69,6 +70,14 @@ class LabServiceFacade {
      */
     async cancelReservation(id: number): Promise<{ message: string }> {
         return api.delete<{ message: string }>(`/labs/reservas/${id}`);
+    }
+
+    /**
+     * Reschedule an existing reservation.
+     * PATCH /labs/reservas/:id/reagendar
+     */
+    async rescheduleReservation(id: number, fecha: string, hora_inicio: number): Promise<{ message: string, reservation: Reservation }> {
+        return api.patch<{ message: string, reservation: Reservation }>(`/labs/reservas/${id}/reagendar`, { fecha, hora_inicio });
     }
 }
 

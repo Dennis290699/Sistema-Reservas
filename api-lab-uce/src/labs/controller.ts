@@ -186,3 +186,26 @@ export const cancelReservation = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+export const rescheduleReservation = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { fecha, hora_inicio } = req.body;
+
+    if (!fecha || hora_inicio === undefined) {
+        return res.status(400).json({ error: 'Missing fecha or hora_inicio parameters' });
+    }
+
+    try {
+        const result = await import('./db').then(m => m.updateReservationTime(Number(id), fecha, Number(hora_inicio)));
+        if (!result) {
+            return res.status(404).json({ error: 'Reservation not found' });
+        }
+        res.json({ message: 'Reservation rescheduled successfully', reservation: result });
+    } catch (error: any) {
+        if (error.code === '23505') {
+            return res.status(409).json({ error: 'El horario solicitado ya se encuentra ocupado.' });
+        }
+        console.error('Update booking error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
