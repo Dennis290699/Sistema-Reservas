@@ -80,10 +80,10 @@ export const getReservationsByUser = async (userId: number): Promise<Reservation
 
 export const getAllReservations = async (): Promise<Reservation[]> => {
     const result = await pool.query(
-        `SELECT r.id, r.lab_id, r.user_id, TO_CHAR(r.fecha, 'YYYY-MM-DD') as fecha, r.hora_inicio, r.materia, r.creado_en, l.nombre as lab_nombre, u.nombre as user_nombre 
+        `SELECT r.id, r.lab_id, r.user_id, TO_CHAR(r.fecha, 'YYYY-MM-DD') as fecha, r.hora_inicio, r.materia, r.creado_en, l.nombre as lab_nombre, u.full_name as user_nombre 
          FROM reservas r 
          JOIN laboratorios l ON r.lab_id = l.id 
-         JOIN usuarios u ON r.user_id = u.id
+         JOIN users u ON r.user_id = u.id
          ORDER BY r.fecha DESC, r.hora_inicio ASC`
     );
     return result.rows;
