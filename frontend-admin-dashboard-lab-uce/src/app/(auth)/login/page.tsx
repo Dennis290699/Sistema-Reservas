@@ -29,6 +29,7 @@ export default function LoginPage() {
                     src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=2000"
                     alt="Laboratory workspace with modern equipment"
                     fill
+                    sizes="50vw"
                     className="object-cover"
                     priority
                 />
