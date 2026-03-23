@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AuthLayout } from '../layouts/AuthLayout';
-import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { PageTransition } from '../components/PageTransition';
 
 export const RegisterPage: React.FC = () => {
@@ -14,8 +14,11 @@ export const RegisterPage: React.FC = () => {
     const register = useAuthStore((state) => state.register);
     const navigate = useNavigate();
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             await register(name, email, password);
             toast.success('Cuenta creada con éxito');
@@ -28,6 +31,8 @@ export const RegisterPage: React.FC = () => {
             } else {
                 toast.error(errorMsg);
             }
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -59,8 +64,8 @@ export const RegisterPage: React.FC = () => {
                                 name="name"
                                 type="text"
                                 autoComplete="name"
-                                required
-                                className="appearance-none rounded-lg relative block w-full pl-12 pr-4 py-4 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black sm:text-sm transition-all bg-gray-50 focus:bg-white"
+                                disabled={isLoading}
+                                className="appearance-none rounded-lg relative block w-full pl-12 pr-4 py-4 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black sm:text-sm transition-all bg-gray-50 focus:bg-white disabled:opacity-60 disabled:bg-gray-100"
                                 placeholder="Nombre Completo"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
@@ -76,8 +81,8 @@ export const RegisterPage: React.FC = () => {
                                 name="email"
                                 type="email"
                                 autoComplete="email"
-                                required
-                                className="appearance-none rounded-lg relative block w-full pl-12 pr-4 py-4 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black sm:text-sm transition-all bg-gray-50 focus:bg-white"
+                                disabled={isLoading}
+                                className="appearance-none rounded-lg relative block w-full pl-12 pr-4 py-4 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black sm:text-sm transition-all bg-gray-50 focus:bg-white disabled:opacity-60 disabled:bg-gray-100"
                                 placeholder="Correo Institucional"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -92,8 +97,8 @@ export const RegisterPage: React.FC = () => {
                                 name="password"
                                 type={showPassword ? "text" : "password"}
                                 autoComplete="new-password"
-                                required
-                                className="appearance-none rounded-lg relative block w-full pl-12 pr-12 py-4 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black sm:text-sm transition-all bg-gray-50 focus:bg-white"
+                                disabled={isLoading}
+                                className="appearance-none rounded-lg relative block w-full pl-12 pr-12 py-4 border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black sm:text-sm transition-all bg-gray-50 focus:bg-white disabled:opacity-60 disabled:bg-gray-100"
                                 placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -117,9 +122,17 @@ export const RegisterPage: React.FC = () => {
                     <div>
                         <button
                             type="submit"
-                            className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-medium rounded-full text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                            disabled={isLoading}
+                            className={`group relative w-full flex justify-center items-center py-4 px-4 border border-transparent text-sm font-medium rounded-full text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all duration-300 shadow-lg ${isLoading ? 'opacity-75 cursor-not-allowed' : 'hover:shadow-xl transform hover:-translate-y-0.5'}`}
                         >
-                            Empezar Ahora
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" />
+                                    Creando credenciales...
+                                </>
+                            ) : (
+                                'Empezar Ahora'
+                            )}
                         </button>
                     </div>
                 </form>
