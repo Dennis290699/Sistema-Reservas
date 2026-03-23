@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { TopHeader } from "@/components/dashboard/TopHeader";
 import { LabService, Lab, Reservation } from "@/services/lab.service";
 import { AuthService } from "@/services/auth.service";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Calendar, MonitorPlay, Activity, Clock, Layers } from "lucide-react";
 import { toast } from "sonner";
 
@@ -92,7 +92,7 @@ export default function InicioPage() {
         day: 'numeric' 
     }).format(new Date());
 
-    const containerVariants = {
+    const containerVariants: Variants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
@@ -100,7 +100,7 @@ export default function InicioPage() {
         }
     };
 
-    const itemVariants = {
+    const itemVariants: Variants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
     };
