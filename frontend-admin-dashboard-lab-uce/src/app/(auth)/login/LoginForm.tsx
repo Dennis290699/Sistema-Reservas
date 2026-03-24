@@ -64,17 +64,17 @@ export default function LoginForm() {
                     name="correoElectronico"
                     render={({ field }) => (
                         <FormItem>
-                            <FormControl>
-                                <div className="relative flex items-center">
-                                    <Mail className="absolute left-3 text-zinc-400 w-5 h-5" />
+                            <div className="relative flex items-center">
+                                <Mail className="absolute left-3 text-zinc-400 w-5 h-5 z-10" />
+                                <FormControl>
                                     <Input
                                         placeholder="Correo Institucional"
-                                        className="pl-10 rounded-xl h-12 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
+                                        className="pl-10 rounded-xl h-12 w-full bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                                         autoComplete="email"
                                         {...field}
                                     />
-                                </div>
-                            </FormControl>
+                                </FormControl>
+                            </div>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -85,29 +85,29 @@ export default function LoginForm() {
                     name="contrasena"
                     render={({ field }) => (
                         <FormItem>
-                            <FormControl>
-                                <div className="relative flex items-center">
-                                    <Lock className="absolute left-3 text-zinc-400 w-5 h-5" />
+                            <div className="relative flex items-center">
+                                <Lock className="absolute left-3 text-zinc-400 w-5 h-5 z-10" />
+                                <FormControl>
                                     <Input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Contraseña"
-                                        className="pl-10 pr-10 rounded-xl h-12 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
+                                        className="pl-10 pr-10 rounded-xl h-12 w-full bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                                         autoComplete="current-password"
                                         {...field}
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                                    >
-                                        {showPassword ? (
-                                            <EyeOff className="w-5 h-5" />
-                                        ) : (
-                                            <Eye className="w-5 h-5" />
-                                        )}
-                                    </button>
-                                </div>
-                            </FormControl>
+                                </FormControl>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 z-10"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="w-5 h-5" />
+                                    ) : (
+                                        <Eye className="w-5 h-5" />
+                                    )}
+                                </button>
+                            </div>
                             <FormMessage />
                         </FormItem>
                     )}
