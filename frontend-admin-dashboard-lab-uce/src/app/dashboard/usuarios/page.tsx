@@ -48,26 +48,50 @@ export default function UsuariosPage() {
 
     const filteredUsers = useMemo(() => {
         let result = users;
+        if (!Array.isArray(users)) return [];
+
         if (searchTerm.trim() !== "") {
             const term = searchTerm.toLowerCase();
-            result = result.filter(u => 
-                (u.full_name || "").toLowerCase().includes(term) ||
-                (u.email || "").toLowerCase().includes(term)
-            );
+            result = result.filter(u => {
+                if (!u) return false;
+                return String(u.full_name || "").toLowerCase().includes(term) || String(u.email || "").toLowerCase().includes(term);
+            });
         }
+        
         if (roleFilter !== "all") {
-            result = result.filter(u => (u.role || "").trim().toLowerCase() === roleFilter);
+            result = result.filter(u => u && String(u.role || "").trim().toLowerCase() === roleFilter);
         }
+
         return result;
     }, [users, searchTerm, roleFilter]);
 
     const stats = useMemo(() => {
-        return {
-            all: users.length,
-            admins: users.filter(u => (u.role || "").trim().toLowerCase() === 'admin').length,
-            students: users.filter(u => (u.role || "").trim().toLowerCase() === 'student').length
-        };
+        try {
+            if (!Array.isArray(users)) return { all: 0, admins: 0, students: 0 };
+            return {
+                all: users.length,
+                admins: users.filter(u => u && String(u.role || "").trim().toLowerCase() === 'admin').length,
+                students: users.filter(u => u && String(u.role || "").trim().toLowerCase() === 'student').length
+            };
+        } catch (error) {
+            console.error("Error al calcular estadísticas:", error);
+            return { all: 0, admins: 0, students: 0 };
+        }
     }, [users]);
+
+    const handleSearchChange = (val: string) => {
+        setSearchTerm(val);
+        // Si el usuario empieza a buscar, reiniciamos el filtro visual para buscar en la base global
+        if (val.trim() !== "" && roleFilter !== "all") {
+            setRoleFilter("all");
+        }
+    };
+
+    const handleRoleChange = (role: string) => {
+        setRoleFilter(role);
+        // Despejamos el texto para no colisionar con el nuevo filtro visualmente
+        setSearchTerm("");
+    };
 
     // Handlers para Create/Edit
     const handleOpenCreateModal = () => {
@@ -184,7 +208,7 @@ export default function UsuariosPage() {
                             type="text" 
                             placeholder="Buscar usuario por nombre o correo (ej: admin@...)"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                             className="w-full bg-transparent border-none text-white outline-none placeholder:text-zinc-600 font-medium"
                         />
                     </div>
@@ -192,7 +216,7 @@ export default function UsuariosPage() {
                     <div className="flex bg-[#141C18] border border-[#2A3B32] p-1 rounded-2xl md:w-auto w-full shrink-0">
                         <button 
                             type="button"
-                            onClick={() => setRoleFilter("all")}
+                            onClick={() => handleRoleChange("all")}
                             className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'all' ? 'bg-[#2A3B32] text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300'}`}
                         >
                             <Users className="w-4 h-4" /> Todos
@@ -200,7 +224,7 @@ export default function UsuariosPage() {
                         </button>
                         <button 
                             type="button"
-                            onClick={() => setRoleFilter("admin")}
+                            onClick={() => handleRoleChange("admin")}
                             className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'admin' ? 'bg-[#D3FB52]/20 text-[#D3FB52] shadow-md border border-[#D3FB52]/10' : 'text-zinc-500 hover:text-zinc-300'}`}
                         >
                             <ShieldAlert className="w-4 h-4" /> Admins
@@ -208,7 +232,7 @@ export default function UsuariosPage() {
                         </button>
                         <button 
                             type="button"
-                            onClick={() => setRoleFilter("student")}
+                            onClick={() => handleRoleChange("student")}
                             className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'student' ? 'bg-blue-500/20 text-blue-400 shadow-md border border-blue-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
                         >
                             <Users className="w-4 h-4" /> Estudiantes
@@ -243,15 +267,11 @@ export default function UsuariosPage() {
                                     <th className="p-5 text-zinc-400 font-medium text-right whitespace-nowrap">Comandos Lógicos</th>
                                 </tr>
                             </thead>
-                            <motion.tbody 
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
+                            <tbody 
                                 className="divide-y divide-[#1C2721]/50 bg-transparent"
                             >
                                 {filteredUsers.map((user) => (
-                                    <motion.tr 
-                                        variants={rowVariants}
+                                    <tr 
                                         key={user.id} 
                                         className={`hover:bg-[#141C18]/60 transition-colors group ${user.estado === 'inactivo' ? 'opacity-50 hover:opacity-100 grayscale hover:grayscale-0' : ''}`}
                                     >
@@ -299,9 +319,9 @@ export default function UsuariosPage() {
                                                 )}
                                             </div>
                                         </td>
-                                    </motion.tr>
+                                    </tr>
                                 ))}
-                            </motion.tbody>
+                            </tbody>
                         </table>
                     </div>
                 )}
