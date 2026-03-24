@@ -49,10 +49,12 @@ app.get('/health', async (req, res) => {
 import authRoutes from './auth/routes';
 import labsRoutes from './labs/routes';
 import usersRoutes from './users/routes';
+import settingsRoutes from './settings/routes';
 
 app.use('/auth', authRoutes);
 app.use('/labs', labsRoutes);
 app.use('/users', usersRoutes);
+app.use('/settings', settingsRoutes);
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
