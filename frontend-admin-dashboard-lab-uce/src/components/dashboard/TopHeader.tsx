@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AuthService, AuthResponse } from "@/services/auth.service";
 import { useNotificationStore } from "@/store/notificationsStore";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
 export function TopHeader() {
@@ -54,12 +55,27 @@ export function TopHeader() {
 
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3 text-zinc-400">
-                    <button
-                        onClick={() => toast.info("Configuraciones rápidas en desarrollo")}
-                        className="p-2 hover:bg-[#1C2721] rounded-full hover:text-white transition-colors"
-                    >
-                        <Settings className="w-5 h-5" />
-                    </button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="p-2 hover:bg-[#1C2721] rounded-full hover:text-white transition-colors outline-none cursor-pointer">
+                                <Settings className="w-5 h-5" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 bg-[#0D1310] border-[#1C2721] text-white mt-2">
+                            <DropdownMenuLabel className="font-medium text-zinc-400">Accesos Rápidos</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-[#1C2721]" />
+                            <DropdownMenuItem asChild className="hover:bg-[#1C2721] focus:bg-[#1C2721] focus:text-white cursor-pointer outline-none">
+                                <Link href="/dashboard/historial-reservas" className="w-full flex items-center gap-2">
+                                    <History className="w-4 h-4 text-zinc-400" />
+                                    Historial Global
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="bg-[#1C2721]" />
+                            <DropdownMenuItem disabled className="text-zinc-500 font-medium cursor-not-allowed">
+                                Más opciones pronto...
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
                     <Sheet onOpenChange={(open: boolean) => { if (open) clearUnread(); }}>
                         <SheetTrigger asChild>
