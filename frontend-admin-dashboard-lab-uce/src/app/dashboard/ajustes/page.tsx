@@ -12,7 +12,7 @@ export default function AjustesGlobalesPage() {
     const [isSaving, setIsSaving] = useState<string | null>(null); // Realiza toggle de botones
     
     // State Maps para las configuraciones locales antes de inyectarlas
-    const [bookingRules, setBookingRules] = useState({ max_days_advance: 14, max_hours_week: 10 });
+    const [bookingRules, setBookingRules] = useState<{max_days_advance: number | null, max_hours_week: number | null}>({ max_days_advance: 14, max_hours_week: 10 });
     const [opsPolicies, setOpsPolicies] = useState({ opening_time: "07:00", closing_time: "21:00", emergency_lockdown: false });
     const [banners, setBanners] = useState({ global_message: "", is_active: false });
 
@@ -144,17 +144,29 @@ export default function AjustesGlobalesPage() {
                                 <label className="text-sm font-semibold text-zinc-300">Días de Anticipación (Límite visual calendario)</label>
                                 <div className="flex items-center gap-4 bg-[#141C18] border border-[#2A3B32] p-2 rounded-xl">
                                     <input 
-                                        type="range" min="1" max="90" 
-                                        value={bookingRules.max_days_advance} 
-                                        onChange={(e) => setBookingRules({ ...bookingRules, max_days_advance: parseInt(e.target.value) })}
-                                        className="w-full h-2 bg-[#2A3B32] rounded-lg appearance-none cursor-pointer accent-[#D3FB52]"
+                                        type="number" min="1" 
+                                        placeholder="Ilimitado"
+                                        disabled={bookingRules.max_days_advance === null}
+                                        value={bookingRules.max_days_advance === null ? '' : bookingRules.max_days_advance} 
+                                        onChange={(e) => setBookingRules({ ...bookingRules, max_days_advance: e.target.value ? parseInt(e.target.value) : null })}
+                                        className="w-full bg-[#0D1310] border border-[#2A3B32] rounded-lg p-2 text-white font-mono focus:border-[#D3FB52] outline-none disabled:opacity-50 transition-colors"
                                     />
-                                    <span className="text-[#D3FB52] font-mono font-bold w-12 text-center shrink-0">{bookingRules.max_days_advance} <span className="text-zinc-600 text-xs text-left">días</span></span>
+                                    <div className="flex items-center gap-2 shrink-0 border-l border-[#2A3B32] pl-4">
+                                        <label className="text-xs text-zinc-400 cursor-pointer flex items-center gap-2 select-none hover:text-white transition-colors">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={bookingRules.max_days_advance === null} 
+                                                onChange={(e) => setBookingRules({...bookingRules, max_days_advance: e.target.checked ? null : 14})} 
+                                                className="w-4 h-4 accent-[#D3FB52] cursor-pointer rounded bg-[#1C2721] border-[#2A3B32]" 
+                                            />
+                                            Ilimitado
+                                        </label>
+                                    </div>
                                     <button 
                                         onClick={() => handleUpdate('booking_rules', bookingRules)}
                                         disabled={isSaving === 'booking_rules'}
                                         title="Guardar Límite de Días"
-                                        className="p-2 rounded-lg bg-[#1C2721] text-zinc-300 hover:text-[#D3FB52] transition-colors shrink-0 flex items-center justify-center border border-[#2A3B32] hover:border-[#D3FB52]/30"
+                                        className="p-2 ml-2 rounded-lg bg-[#1C2721] text-zinc-300 hover:text-[#D3FB52] transition-colors shrink-0 flex items-center justify-center border border-[#2A3B32] hover:border-[#D3FB52]/30"
                                     >
                                         {isSaving === 'booking_rules' ? <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> : <Save className="w-4 h-4" />}
                                     </button>
@@ -165,17 +177,29 @@ export default function AjustesGlobalesPage() {
                                 <label className="text-sm font-semibold text-zinc-300">Límite de Consumo Semanal (Total Horas por cuenta)</label>
                                 <div className="flex items-center gap-4 bg-[#141C18] border border-[#2A3B32] p-2 rounded-xl">
                                     <input 
-                                        type="range" min="1" max="40" 
-                                        value={bookingRules.max_hours_week} 
-                                        onChange={(e) => setBookingRules({ ...bookingRules, max_hours_week: parseInt(e.target.value) })}
-                                        className="w-full h-2 bg-[#2A3B32] rounded-lg appearance-none cursor-pointer accent-[#D3FB52]"
+                                        type="number" min="1" 
+                                        placeholder="Ilimitado"
+                                        disabled={bookingRules.max_hours_week === null}
+                                        value={bookingRules.max_hours_week === null ? '' : bookingRules.max_hours_week} 
+                                        onChange={(e) => setBookingRules({ ...bookingRules, max_hours_week: e.target.value ? parseInt(e.target.value) : null })}
+                                        className="w-full bg-[#0D1310] border border-[#2A3B32] rounded-lg p-2 text-white font-mono focus:border-[#D3FB52] outline-none disabled:opacity-50 transition-colors"
                                     />
-                                    <span className="text-[#D3FB52] font-mono font-bold w-12 text-center shrink-0">{bookingRules.max_hours_week} <span className="text-zinc-600 text-xs text-left">hrs</span></span>
+                                    <div className="flex items-center gap-2 shrink-0 border-l border-[#2A3B32] pl-4">
+                                        <label className="text-xs text-zinc-400 cursor-pointer flex items-center gap-2 select-none hover:text-white transition-colors">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={bookingRules.max_hours_week === null} 
+                                                onChange={(e) => setBookingRules({...bookingRules, max_hours_week: e.target.checked ? null : 10})} 
+                                                className="w-4 h-4 accent-[#D3FB52] cursor-pointer rounded bg-[#1C2721] border-[#2A3B32]" 
+                                            />
+                                            Ilimitado
+                                        </label>
+                                    </div>
                                     <button 
                                         onClick={() => handleUpdate('booking_rules', bookingRules)}
                                         disabled={isSaving === 'booking_rules'}
                                         title="Guardar Horas Máximas"
-                                        className="p-2 rounded-lg bg-[#1C2721] text-zinc-300 hover:text-[#D3FB52] transition-colors shrink-0 flex items-center justify-center border border-[#2A3B32] hover:border-[#D3FB52]/30"
+                                        className="p-2 ml-2 rounded-lg bg-[#1C2721] text-zinc-300 hover:text-[#D3FB52] transition-colors shrink-0 flex items-center justify-center border border-[#2A3B32] hover:border-[#D3FB52]/30"
                                     >
                                         {isSaving === 'booking_rules' ? <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> : <Save className="w-4 h-4" />}
                                     </button>

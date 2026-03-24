@@ -53,13 +53,26 @@ export const purgeHistory = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Debe especificar al menos un estado para purgar.' });
         }
 
-        // We use parameterized queries with ANY to safely delete matched reservations
+        const deleteConditions = [];
+
+        if (targetStatuses.includes('finalizada')) {
+            deleteConditions.push(`(fecha < CURRENT_DATE OR (fecha = CURRENT_DATE AND hora_inicio < EXTRACT(HOUR FROM CURRENT_TIME)))`);
+        }
+        if (targetStatuses.includes('activa')) {
+            deleteConditions.push(`(fecha > CURRENT_DATE OR (fecha = CURRENT_DATE AND hora_inicio >= EXTRACT(HOUR FROM CURRENT_TIME)))`);
+        }
+
+        if (deleteConditions.length === 0) {
+           // Si solo pasaron 'cancelada' (que son hard-deleted), no hacemos nada
+           return res.json({ message: 'No hay registros físicos que coincidan con la purga.', deleted_rows: 0 });
+        }
+
         const query = `
             DELETE FROM reservas
-            WHERE estado = ANY($1::text[])
+            WHERE ${deleteConditions.join(' OR ')}
         `;
         
-        const result = await pool.query(query, [targetStatuses]);
+        const result = await pool.query(query);
         
         res.json({
             message: 'Purga del historial ejecutada exitosamente.',
