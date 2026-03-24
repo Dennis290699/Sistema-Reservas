@@ -15,7 +15,7 @@ export const SettingsService = {
         return api.put<SystemSetting>(`/settings/${key}`, { value });
     },
 
-    purgeHistory: async (): Promise<{ message: string, deleted_rows: number }> => {
-        return api.post<{ message: string, deleted_rows: number }>('/settings/purge-history', {});
+    purgeHistory: async (targetStatuses: string[]): Promise<{ message: string, deleted_rows: number }> => {
+        return api.post<{ message: string, deleted_rows: number }>('/settings/purge-history', { targetStatuses });
     }
 };

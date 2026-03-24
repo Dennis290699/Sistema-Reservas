@@ -47,16 +47,19 @@ export const updateSetting = async (req: Request, res: Response) => {
 
 export const purgeHistory = async (req: Request, res: Response) => {
     try {
-        // Enforce Super Admin or assume this is protected by middleware (it is)
+        const { targetStatuses } = req.body;
         
-        // Delete any reservation older than 6 months.
-        // We use a safe deletion approach to keep recent metrics alive.
+        if (!Array.isArray(targetStatuses) || targetStatuses.length === 0) {
+            return res.status(400).json({ error: 'Debe especificar al menos un estado para purgar.' });
+        }
+
+        // We use parameterized queries with ANY to safely delete matched reservations
         const query = `
             DELETE FROM reservas
-            WHERE fecha < CURRENT_DATE - INTERVAL '6 months';
+            WHERE estado = ANY($1::text[])
         `;
         
-        const result = await pool.query(query);
+        const result = await pool.query(query, [targetStatuses]);
         
         res.json({
             message: 'Purga del historial ejecutada exitosamente.',

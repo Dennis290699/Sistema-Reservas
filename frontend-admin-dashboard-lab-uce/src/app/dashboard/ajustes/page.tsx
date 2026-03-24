@@ -16,8 +16,13 @@ export default function AjustesGlobalesPage() {
     const [opsPolicies, setOpsPolicies] = useState({ opening_time: "07:00", closing_time: "21:00", emergency_lockdown: false });
     const [banners, setBanners] = useState({ global_message: "", is_active: false });
 
-    // Modals
+    // Modals & Purge
     const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
+    const [purgeOptions, setPurgeOptions] = useState({
+        cancelada: true,
+        finalizada: true,
+        activa: false
+    });
 
     const fetchConfig = async () => {
         try {
@@ -58,10 +63,20 @@ export default function AjustesGlobalesPage() {
     };
 
     const executePurge = async () => {
+        const targetStatuses = [];
+        if (purgeOptions.cancelada) targetStatuses.push('cancelada');
+        if (purgeOptions.finalizada) targetStatuses.push('finalizada');
+        if (purgeOptions.activa) targetStatuses.push('activa');
+
+        if (targetStatuses.length === 0) {
+            toast.error("Debe habilitar al menos un estado civil de reserva para purgar.");
+            return;
+        }
+
         try {
             setIsPurgeModalOpen(false);
             setIsSaving('purge_history');
-            const result = await SettingsService.purgeHistory();
+            const result = await SettingsService.purgeHistory(targetStatuses);
             toast.success(`Purga Sistémica completada: Se liberaron ${result.deleted_rows || 0} registros fantasma del servidor central.`);
         } catch (error: any) {
             toast.error("Fallo durante la Directiva de Limpieza Profunda.");
@@ -125,7 +140,7 @@ export default function AjustesGlobalesPage() {
                         </div>
 
                         <div className="space-y-6 mb-8">
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-3">
                                 <label className="text-sm font-semibold text-zinc-300">Días de Anticipación (Límite visual calendario)</label>
                                 <div className="flex items-center gap-4 bg-[#141C18] border border-[#2A3B32] p-2 rounded-xl">
                                     <input 
@@ -134,11 +149,19 @@ export default function AjustesGlobalesPage() {
                                         onChange={(e) => setBookingRules({ ...bookingRules, max_days_advance: parseInt(e.target.value) })}
                                         className="w-full h-2 bg-[#2A3B32] rounded-lg appearance-none cursor-pointer accent-[#D3FB52]"
                                     />
-                                    <span className="text-[#D3FB52] font-mono font-bold w-12 text-center">{bookingRules.max_days_advance} <span className="text-zinc-600 text-xs text-left">días</span></span>
+                                    <span className="text-[#D3FB52] font-mono font-bold w-12 text-center shrink-0">{bookingRules.max_days_advance} <span className="text-zinc-600 text-xs text-left">días</span></span>
+                                    <button 
+                                        onClick={() => handleUpdate('booking_rules', bookingRules)}
+                                        disabled={isSaving === 'booking_rules'}
+                                        title="Guardar Límite de Días"
+                                        className="p-2 rounded-lg bg-[#1C2721] text-zinc-300 hover:text-[#D3FB52] transition-colors shrink-0 flex items-center justify-center border border-[#2A3B32] hover:border-[#D3FB52]/30"
+                                    >
+                                        {isSaving === 'booking_rules' ? <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> : <Save className="w-4 h-4" />}
+                                    </button>
                                 </div>
                             </div>
                             
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-3">
                                 <label className="text-sm font-semibold text-zinc-300">Límite de Consumo Semanal (Total Horas por cuenta)</label>
                                 <div className="flex items-center gap-4 bg-[#141C18] border border-[#2A3B32] p-2 rounded-xl">
                                     <input 
@@ -147,20 +170,19 @@ export default function AjustesGlobalesPage() {
                                         onChange={(e) => setBookingRules({ ...bookingRules, max_hours_week: parseInt(e.target.value) })}
                                         className="w-full h-2 bg-[#2A3B32] rounded-lg appearance-none cursor-pointer accent-[#D3FB52]"
                                     />
-                                    <span className="text-[#D3FB52] font-mono font-bold w-12 text-center">{bookingRules.max_hours_week} <span className="text-zinc-600 text-xs text-left">hrs</span></span>
+                                    <span className="text-[#D3FB52] font-mono font-bold w-12 text-center shrink-0">{bookingRules.max_hours_week} <span className="text-zinc-600 text-xs text-left">hrs</span></span>
+                                    <button 
+                                        onClick={() => handleUpdate('booking_rules', bookingRules)}
+                                        disabled={isSaving === 'booking_rules'}
+                                        title="Guardar Horas Máximas"
+                                        className="p-2 rounded-lg bg-[#1C2721] text-zinc-300 hover:text-[#D3FB52] transition-colors shrink-0 flex items-center justify-center border border-[#2A3B32] hover:border-[#D3FB52]/30"
+                                    >
+                                        {isSaving === 'booking_rules' ? <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> : <Save className="w-4 h-4" />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <button 
-                        onClick={() => handleUpdate('booking_rules', bookingRules)}
-                        disabled={isSaving === 'booking_rules'}
-                        className="w-full py-4 rounded-xl items-center justify-center flex gap-2 font-bold bg-[#1C2721] text-zinc-300 hover:text-[#D3FB52] border border-[#2A3B32] hover:bg-[#D3FB52]/5 hover:border-[#D3FB52]/30 transition-all"
-                    >
-                        {isSaving === 'booking_rules' ? <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> : <Save className="w-5 h-5" />}
-                        Salvar Límites Matemáticos
-                    </button>
                 </motion.div>
 
                 {/* Modulo 2: Politicas Operativas y Kill-Switch */}
@@ -315,8 +337,49 @@ export default function AjustesGlobalesPage() {
                             <AlertTriangle className="w-6 h-6" /> Confirmar Purga Sistémica
                         </DialogTitle>
                         <DialogDescription className="text-orange-200/70 pt-4 text-base">
-                            Estás a punto de invocar la <strong>Limpieza de Data Fría</strong>. Todas las reservaciones obsoletas (mayores a 6 meses de antigüedad) desaparecerán permanentemente de la base de datos principal para optimizar la velocidad del servidor y el ancho de banda. <br/><br/>Esta acción no se puede deshacer.
+                            Estás a punto de invocar la <strong>Limpieza de Data Fría</strong>. Selecciona qué historiales de base de datos desaparecerán permanentemente del servidor central y sus réplicas. Esta acción es instantánea y no se puede deshacer.
                         </DialogDescription>
+                        
+                        <div className="flex flex-col gap-3 py-6">
+                            <label className="flex items-center gap-4 p-4 rounded-xl border border-orange-900/30 bg-[#0D1310] cursor-pointer hover:border-orange-500/50 transition-colors">
+                                <input 
+                                    type="checkbox" 
+                                    checked={purgeOptions.cancelada} 
+                                    onChange={(e) => setPurgeOptions({...purgeOptions, cancelada: e.target.checked})}
+                                    className="w-5 h-5 accent-orange-500 rounded border-gray-600"
+                                />
+                                <div>
+                                    <span className="text-zinc-200 font-bold block">Reservaciones Canceladas</span>
+                                    <span className="text-xs text-zinc-500">Historiales de reservas anuladas por estudiantes.</span>
+                                </div>
+                            </label>
+                            
+                            <label className="flex items-center gap-4 p-4 rounded-xl border border-green-900/30 bg-[#0D1310] cursor-pointer hover:border-green-500/50 transition-colors">
+                                <input 
+                                    type="checkbox" 
+                                    checked={purgeOptions.finalizada} 
+                                    onChange={(e) => setPurgeOptions({...purgeOptions, finalizada: e.target.checked})}
+                                    className="w-5 h-5 accent-green-500 rounded border-gray-600"
+                                />
+                                <div>
+                                    <span className="text-zinc-200 font-bold block">Reservaciones Finalizadas</span>
+                                    <span className="text-xs text-zinc-500">Prácticas antiguas que ya concluyeron y pasaron a archivo.</span>
+                                </div>
+                            </label>
+
+                            <label className="flex items-center gap-4 p-4 rounded-xl border border-red-900/40 bg-red-950/20 cursor-pointer hover:border-red-500/60 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.05)_inset]">
+                                <input 
+                                    type="checkbox" 
+                                    checked={purgeOptions.activa} 
+                                    onChange={(e) => setPurgeOptions({...purgeOptions, activa: e.target.checked})}
+                                    className="w-5 h-5 accent-red-600 rounded border-red-500"
+                                />
+                                <div>
+                                    <span className="text-red-400 font-bold block flex items-center gap-2"><AlertTriangle className="w-4 h-4"/> Reservaciones Activas (PELIGRO)</span>
+                                    <span className="text-xs text-red-300/60">Destruir por la fuerza reservas futuras que aún no han sucedido.</span>
+                                </div>
+                            </label>
+                        </div>
                     </DialogHeader>
 
                     <DialogFooter className="mt-6 flex gap-3 sm:justify-end">
