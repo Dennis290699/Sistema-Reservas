@@ -149,18 +149,16 @@ export default function AjustesGlobalesPage() {
                                         disabled={bookingRules.max_days_advance === null}
                                         value={bookingRules.max_days_advance === null ? '' : bookingRules.max_days_advance} 
                                         onChange={(e) => setBookingRules({ ...bookingRules, max_days_advance: e.target.value ? parseInt(e.target.value) : null })}
-                                        className="w-full bg-[#0D1310] border border-[#2A3B32] rounded-lg p-2 text-white font-mono focus:border-[#D3FB52] outline-none disabled:opacity-50 transition-colors"
+                                        className="w-full bg-[#0D1310] border border-[#2A3B32] rounded-lg p-2 text-white font-mono focus:border-[#D3FB52] outline-none disabled:opacity-50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     />
-                                    <div className="flex items-center gap-2 shrink-0 border-l border-[#2A3B32] pl-4">
-                                        <label className="text-xs text-zinc-400 cursor-pointer flex items-center gap-2 select-none hover:text-white transition-colors">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={bookingRules.max_days_advance === null} 
-                                                onChange={(e) => setBookingRules({...bookingRules, max_days_advance: e.target.checked ? null : 14})} 
-                                                className="w-4 h-4 accent-[#D3FB52] cursor-pointer rounded bg-[#1C2721] border-[#2A3B32]" 
-                                            />
-                                            Ilimitado
-                                        </label>
+                                    <div className="flex items-center gap-3 shrink-0 border-l border-[#2A3B32] pl-4">
+                                        <span className="text-xs font-medium text-zinc-400">Ilimitado</span>
+                                        <div 
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${bookingRules.max_days_advance === null ? 'bg-[#D3FB52]' : 'bg-[#2A3B32]'}`}
+                                            onClick={() => setBookingRules({...bookingRules, max_days_advance: bookingRules.max_days_advance === null ? 14 : null})}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${bookingRules.max_days_advance === null ? 'translate-x-5 bg-black' : 'translate-x-0 bg-zinc-400'}`} />
+                                        </div>
                                     </div>
                                     <button 
                                         onClick={() => handleUpdate('booking_rules', bookingRules)}
@@ -182,18 +180,16 @@ export default function AjustesGlobalesPage() {
                                         disabled={bookingRules.max_hours_week === null}
                                         value={bookingRules.max_hours_week === null ? '' : bookingRules.max_hours_week} 
                                         onChange={(e) => setBookingRules({ ...bookingRules, max_hours_week: e.target.value ? parseInt(e.target.value) : null })}
-                                        className="w-full bg-[#0D1310] border border-[#2A3B32] rounded-lg p-2 text-white font-mono focus:border-[#D3FB52] outline-none disabled:opacity-50 transition-colors"
+                                        className="w-full bg-[#0D1310] border border-[#2A3B32] rounded-lg p-2 text-white font-mono focus:border-[#D3FB52] outline-none disabled:opacity-50 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     />
-                                    <div className="flex items-center gap-2 shrink-0 border-l border-[#2A3B32] pl-4">
-                                        <label className="text-xs text-zinc-400 cursor-pointer flex items-center gap-2 select-none hover:text-white transition-colors">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={bookingRules.max_hours_week === null} 
-                                                onChange={(e) => setBookingRules({...bookingRules, max_hours_week: e.target.checked ? null : 10})} 
-                                                className="w-4 h-4 accent-[#D3FB52] cursor-pointer rounded bg-[#1C2721] border-[#2A3B32]" 
-                                            />
-                                            Ilimitado
-                                        </label>
+                                    <div className="flex items-center gap-3 shrink-0 border-l border-[#2A3B32] pl-4">
+                                        <span className="text-xs font-medium text-zinc-400">Ilimitado</span>
+                                        <div 
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${bookingRules.max_hours_week === null ? 'bg-[#D3FB52]' : 'bg-[#2A3B32]'}`}
+                                            onClick={() => setBookingRules({...bookingRules, max_hours_week: bookingRules.max_hours_week === null ? 10 : null})}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${bookingRules.max_hours_week === null ? 'translate-x-5 bg-black' : 'translate-x-0 bg-zinc-400'}`} />
+                                        </div>
                                     </div>
                                     <button 
                                         onClick={() => handleUpdate('booking_rules', bookingRules)}
