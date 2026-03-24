@@ -49,12 +49,11 @@ export const purgeHistory = async (req: Request, res: Response) => {
     try {
         // Enforce Super Admin or assume this is protected by middleware (it is)
         
-        // Delete all 'cancelada' status reservations AND any reservation older than 6 months.
+        // Delete any reservation older than 6 months.
         // We use a safe deletion approach to keep recent metrics alive.
         const query = `
-            DELETE FROM reservations
-            WHERE status IN ('cancelada', 'finalizada') 
-            AND (fecha < CURRENT_DATE - INTERVAL '6 months');
+            DELETE FROM reservas
+            WHERE fecha < CURRENT_DATE - INTERVAL '6 months';
         `;
         
         const result = await pool.query(query);

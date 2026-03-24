@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import type { Lab, Reservation } from '../types';
 import { toast } from 'sonner';
-import { Trash2, Calendar } from 'lucide-react';
+import { Trash2, Calendar, AlertCircle } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { SessionTimer } from '../components/SessionTimer';
+import { SettingsService } from '../lib/settings.service';
 
 interface ReservationWithLab extends Reservation {
     lab_nombre: string;
@@ -19,16 +20,22 @@ export const Dashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'labs' | 'reservations'>('labs');
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [reservationToDelete, setReservationToDelete] = useState<number[]>([]);
+    const [settings, setSettings] = useState<any>(null);
     const navigate = useNavigate();
 
     const fetchData = async (isInitial = false) => {
         if (isInitial) setLoading(true);
         try {
-            const [labsRes, reservationsRes] = await Promise.all([
+            const [labsRes, reservationsRes, settingsRes] = await Promise.all([
                 api.get('/labs'),
-                api.get('/labs/mis-reservas')
+                api.get('/labs/mis-reservas'),
+                SettingsService.getSettings()
             ]);
             setLabs(labsRes.data);
+
+            const settingsMap: any = {};
+            settingsRes.forEach(s => settingsMap[s.key] = s.value);
+            setSettings(settingsMap);
 
             // Sort reservations: Newest first
             const sortedReservations = reservationsRes.data.sort((a: ReservationWithLab, b: ReservationWithLab) => {
@@ -132,6 +139,17 @@ export const Dashboard: React.FC = () => {
 
     return (
         <div className="max-w-5xl mx-auto animate-in fade-in duration-500">
+            {/* Comunicados Visuales / Banners */}
+            {settings?.communication_banners?.is_active && settings?.communication_banners?.global_message && (
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded-r-lg shadow-sm font-sans flex items-start gap-3">
+                    <AlertCircle className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />
+                    <div>
+                        <h3 className="text-blue-800 font-bold text-sm uppercase tracking-wider mb-1">Aviso de Administración</h3>
+                        <p className="text-blue-700 text-sm leading-relaxed">{settings.communication_banners.global_message}</p>
+                    </div>
+                </div>
+            )}
+
             {/* Header Area */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-gray-100 pb-4">
                 <div>
@@ -169,8 +187,10 @@ export const Dashboard: React.FC = () => {
             {activeTab === 'labs' && (
                 <div className="grid grid-cols-1 gap-6">
                     {labs.map((lab) => {
-                        const estado = lab.estado || 'disponible';
-                        const isAvailable = estado === 'disponible';
+                        const isLockdown = settings?.operational_policies?.emergency_lockdown === true;
+                        const originalEstado = lab.estado || 'disponible';
+                        const estado = isLockdown ? 'inhabilitado' : originalEstado;
+                        const isAvailable = estado === 'disponible' && !isLockdown;
 
                         return (
                             <div key={lab.id} className={`group flex flex-col md:flex-row items-center justify-between p-6 border transition-all rounded-lg bg-white ${isAvailable ? 'border-gray-100 hover:border-black' : 'border-gray-100 opacity-75'}`}>
@@ -184,7 +204,7 @@ export const Dashboard: React.FC = () => {
                                         )}
                                         {estado === 'inhabilitado' && (
                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 border border-red-200 uppercase tracking-wide">
-                                                Inhabilitado
+                                                {isLockdown ? 'Plataforma Bloqueada' : 'Inhabilitado'}
                                             </span>
                                         )}
                                     </div>
@@ -196,7 +216,7 @@ export const Dashboard: React.FC = () => {
                                     <div className="hidden md:flex items-center gap-2">
                                         <div className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-green-500' : estado === 'mantenimiento' ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
                                         <span className="text-xs text-gray-400 uppercase tracking-wider">
-                                            {isAvailable ? 'Disponible' : estado === 'mantenimiento' ? 'En Mantenimiento' : 'Inhabilitado'}
+                                            {isAvailable ? 'Disponible' : estado === 'mantenimiento' ? 'En Mantenimiento' : isLockdown ? 'Emergencia' : 'Inhabilitado'}
                                         </span>
                                     </div>
                                     <Button

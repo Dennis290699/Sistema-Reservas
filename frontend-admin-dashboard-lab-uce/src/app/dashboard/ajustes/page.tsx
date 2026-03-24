@@ -5,6 +5,7 @@ import { motion, Variants } from "framer-motion";
 import { Settings, Shield, DatabaseZap, Clock, FileText, AlertTriangle, Save, CalendarDays, Activity, MessageSquareWarning } from "lucide-react";
 import { toast } from "sonner";
 import { SettingsService, SystemSetting } from "@/services/settings.service";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function AjustesGlobalesPage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +15,9 @@ export default function AjustesGlobalesPage() {
     const [bookingRules, setBookingRules] = useState({ max_days_advance: 14, max_hours_week: 10 });
     const [opsPolicies, setOpsPolicies] = useState({ opening_time: "07:00", closing_time: "21:00", emergency_lockdown: false });
     const [banners, setBanners] = useState({ global_message: "", is_active: false });
+
+    // Modals
+    const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
 
     const fetchConfig = async () => {
         try {
@@ -49,10 +53,13 @@ export default function AjustesGlobalesPage() {
         }
     };
 
-    const handlePurge = async () => {
-        if (!window.confirm("🔴 ADVERTENCIA CRÍTICA: Estás a punto de invocar la 'Purga de Data Fría'. Todas las reservaciones obsoletas (> 6 meses) o canceladas desaparecerán totalmente de la interfaz. ¿Deseas ejecutar este comando Maestro?")) return;
-        
+    const confirmPurge = () => {
+        setIsPurgeModalOpen(true);
+    };
+
+    const executePurge = async () => {
         try {
+            setIsPurgeModalOpen(false);
             setIsSaving('purge_history');
             const result = await SettingsService.purgeHistory();
             toast.success(`Purga Sistémica completada: Se liberaron ${result.deleted_rows || 0} registros fantasma del servidor central.`);
@@ -289,7 +296,7 @@ export default function AjustesGlobalesPage() {
                     </div>
 
                     <button 
-                        onClick={handlePurge}
+                        onClick={confirmPurge}
                         disabled={isSaving === 'purge_history'}
                         className="w-full py-4 rounded-xl items-center justify-center flex gap-2 font-bold bg-[#2C2112] text-orange-500 hover:bg-orange-600 hover:text-black border border-orange-900/50 hover:border-orange-500 transition-all shadow-[0_4px_15px_rgba(249,115,22,0.1)]"
                     >
@@ -299,6 +306,29 @@ export default function AjustesGlobalesPage() {
                 </motion.div>
                 
             </motion.div>
+
+            {/* Modal de Peligro: Limpieza Profunda */}
+            <Dialog open={isPurgeModalOpen} onOpenChange={setIsPurgeModalOpen}>
+                <DialogContent className="bg-[#1a1c14] border-orange-900/50 text-white shadow-[0_0_50px_rgba(249,115,22,0.15)]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2 text-orange-500 font-bold">
+                            <AlertTriangle className="w-6 h-6" /> Confirmar Purga Sistémica
+                        </DialogTitle>
+                        <DialogDescription className="text-orange-200/70 pt-4 text-base">
+                            Estás a punto de invocar la <strong>Limpieza de Data Fría</strong>. Todas las reservaciones obsoletas (mayores a 6 meses de antigüedad) desaparecerán permanentemente de la base de datos principal para optimizar la velocidad del servidor y el ancho de banda. <br/><br/>Esta acción no se puede deshacer.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="mt-6 flex gap-3 sm:justify-end">
+                        <button onClick={() => setIsPurgeModalOpen(false)} className="px-5 py-2.5 rounded-xl border border-[#2A3B32] text-zinc-400 hover:text-white hover:bg-[#1C2721] font-medium transition-colors cursor-pointer">
+                            Cancelar y Volver
+                        </button>
+                        <button onClick={executePurge} className="px-5 py-2.5 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.4)] transition-colors flex items-center gap-2 cursor-pointer">
+                            <DatabaseZap className="w-4 h-4" /> Autorizar Purga de Servidor
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

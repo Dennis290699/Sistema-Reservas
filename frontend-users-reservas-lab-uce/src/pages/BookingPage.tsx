@@ -6,6 +6,7 @@ import type { Lab, AvailabilitySlot } from '../types';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { ArrowLeft, Clock, CheckCircle2 } from 'lucide-react';
+import { SettingsService } from '../lib/settings.service';
 
 export const BookingPage: React.FC = () => {
     const { labId } = useParams<{ labId: string }>();
@@ -18,18 +19,27 @@ export const BookingPage: React.FC = () => {
     const [materia, setMateria] = useState('');
     const [loading, setLoading] = useState(false);
     const [bookingLoading, setBookingLoading] = useState(false);
+    const [settings, setSettings] = useState<any>(null);
 
     useEffect(() => {
-        const fetchLab = async () => {
+        const fetchContext = async () => {
             try {
-                const response = await api.get('/labs');
-                const found = response.data.find((l: Lab) => l.id === Number(labId));
+                const [labsRes, settingsRes] = await Promise.all([
+                    api.get('/labs'),
+                    SettingsService.getSettings()
+                ]);
+
+                const found = labsRes.data.find((l: Lab) => l.id === Number(labId));
                 setLab(found || null);
+
+                const settingsMap: any = {};
+                settingsRes.forEach(s => settingsMap[s.key] = s.value);
+                setSettings(settingsMap);
             } catch (err) {
                 console.error(err);
             }
         };
-        fetchLab();
+        fetchContext();
     }, [labId]);
 
     const fetchAvailability = useCallback(async (isInitial = false) => {
@@ -138,6 +148,13 @@ export const BookingPage: React.FC = () => {
         }
     };
 
+    const getMaxDateString = () => {
+        if (!settings?.booking_rules?.max_days_advance) return undefined;
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + settings.booking_rules.max_days_advance);
+        return maxDate.toISOString().split('T')[0];
+    };
+
     if (!lab) return <div className="text-center mt-20 font-serif text-xl">Cargando información...</div>;
 
     return (
@@ -167,6 +184,7 @@ export const BookingPage: React.FC = () => {
                                 onChange={handleDateChange}
                                 className="w-full bg-gray-50 border-gray-200 focus:ring-black focus:border-black transition-all p-4"
                                 min={new Date().toISOString().split('T')[0]}
+                                max={getMaxDateString()}
                             />
                         </div>
 
@@ -234,9 +252,18 @@ export const BookingPage: React.FC = () => {
                         <div className="h-96 flex items-center justify-center">
                             <p className="text-gray-400 animate-pulse font-serif">Verificando agenda...</p>
                         </div>
+                    ) : settings?.operational_policies?.emergency_lockdown ? (
+                         <div className="h-96 flex justify-center items-center">
+                             <h2 className="text-2xl font-serif text-red-600">La facultad se encuentra bajo un protocolo cerrado de mantenimiento maestro. Las reservas están paralizadas.</h2>
+                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                            {availability.map((slot) => {
+                            {availability.filter(slot => {
+                                if (!settings?.operational_policies) return true;
+                                const openH = parseInt(String(settings.operational_policies.opening_time).split(':')[0]);
+                                const closeH = parseInt(String(settings.operational_policies.closing_time).split(':')[0]);
+                                return slot.hora >= openH && slot.hora < closeH;
+                            }).map((slot) => {
                                 const past = isPastHour(slot.hora);
                                 const occupied = slot.estado === 'ocupado';
                                 const selected = selectedHours.includes(slot.hora);

@@ -4,12 +4,14 @@ import { authenticateToken, authorize } from '../middleware/auth';
 
 const router = Router();
 
-// Protect ALL routes with Super Admin tokens since this is the global configuration layer
+// Protect ALL routes with JWT Authentication
 router.use(authenticateToken);
-router.use(authorize(['admin']));
 
+// GET is accessible by any authenticated user (Students need to read the limits/banners)
 router.get('/', getSettings);
-router.put('/:key', updateSetting);
-router.post('/purge-history', purgeHistory);
+
+// Mutations are strictly for Admins
+router.put('/:key', authorize(['admin']), updateSetting);
+router.post('/purge-history', authorize(['admin']), purgeHistory);
 
 export default router;
