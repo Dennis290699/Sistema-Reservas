@@ -27,6 +27,18 @@ export const listAllUsers = async (req: Request, res: Response) => {
     }
 };
 
+export const getSingleUser = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const user = await getUserById(Number(id));
+        if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+        res.json(user);
+    } catch (error) {
+        console.error('Error fetching single user:', error);
+        res.status(500).json({ error: 'Error del servidor al recuperar perfil de usuario' });
+    }
+};
+
 export const addUser = async (req: Request, res: Response) => {
     const validation = createUserSchema.safeParse(req.body);
     if (!validation.success) return res.status(400).json({ error: validation.error.errors[0].message });

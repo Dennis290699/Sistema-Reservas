@@ -17,8 +17,6 @@ export default function UsuariosPage() {
 
     // Modal States
     const [isCreateEditModalOpen, setIsCreateEditModalOpen] = useState(false);
-    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     
     // Active User Selection
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -31,8 +29,6 @@ export default function UsuariosPage() {
         estado: "activo",
         password: ""
     });
-    
-    const [newPassword, setNewPassword] = useState("");
 
     const fetchData = async () => {
         try {
@@ -122,33 +118,6 @@ export default function UsuariosPage() {
         }
     };
 
-    // Handler para Ver Detalles
-    const handleViewDetails = (user: User) => {
-        setSelectedUser(user);
-        setIsDetailsModalOpen(true);
-    };
-
-    // Handlers para Force Password Reset
-    const handleOpenPasswordModal = (user: User) => {
-        setSelectedUser(user);
-        setNewPassword("");
-        setIsPasswordModalOpen(true);
-    };
-
-    const handleExecutePasswordReset = async () => {
-        if (!selectedUser) return;
-        if (newPassword.length < 6) return toast.error("Para garantizar la seguridad, la nueva contraseña requiere mínimo 6 caracteres.");
-
-        try {
-            await UserService.updatePassword(selectedUser.id, newPassword);
-            toast.success("Asignación forzosa de contraseña completada. El usuario ya puede ingresar con su nueva clave.");
-            setIsPasswordModalOpen(false);
-            setNewPassword("");
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || "Error de servidor al reescribir la contraseña.");
-        }
-    };
-
     // Handler para Trash (Soft Disable)
     const handleDisableUser = async (user: User) => {
         if (!window.confirm(`¿Estás seguro que deseas INHABILITAR de por vida el acceso a la cuenta de ${user.full_name}? (Se mantendrá en el historial pero su sesión morirá).`)) return;
@@ -218,15 +187,26 @@ export default function UsuariosPage() {
                         />
                     </div>
                     
-                    <select 
-                        value={roleFilter}
-                        onChange={(e) => setRoleFilter(e.target.value)}
-                        className="bg-[#141C18] border border-[#2A3B32] p-4 rounded-2xl text-white outline-none cursor-pointer appearance-none md:w-64 focus:border-[#D3FB52] transition-colors"
-                    >
-                        <option value="all">🛡️ Filtrar: Todos los Roles</option>
-                        <option value="admin">⭐ Administradores del Sistema</option>
-                        <option value="student">🎓 Estudiantes Regulares</option>
-                    </select>
+                    <div className="flex bg-[#141C18] border border-[#2A3B32] p-1 rounded-2xl md:w-auto w-full shrink-0">
+                        <button 
+                            onClick={() => setRoleFilter("all")}
+                            className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'all' ? 'bg-[#2A3B32] text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <Users className="w-4 h-4" /> Todos
+                        </button>
+                        <button 
+                            onClick={() => setRoleFilter("admin")}
+                            className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'admin' ? 'bg-[#D3FB52]/20 text-[#D3FB52] shadow-md border border-[#D3FB52]/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <ShieldAlert className="w-4 h-4" /> Admins
+                        </button>
+                        <button 
+                            onClick={() => setRoleFilter("student")}
+                            className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'student' ? 'bg-blue-500/20 text-blue-400 shadow-md border border-blue-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <Users className="w-4 h-4" /> Estudiantes
+                        </button>
+                    </div>
                 </div>
 
                 {/* Table Data */}
@@ -298,13 +278,10 @@ export default function UsuariosPage() {
                                         </td>
                                         <td className="p-5">
                                             <div className="flex justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleViewDetails(user)} className="p-2 bg-[#0D1310] hover:bg-[#1C2721] border border-[#1C2721] hover:border-[#2A3B32] text-zinc-400 hover:text-white rounded-lg transition-all" title="Ver Detalles Ocultos">
+                                                <Link href={`/dashboard/usuarios/${user.id}`} className="p-2 bg-[#0D1310] hover:bg-[#D3FB52]/10 border border-[#1C2721] hover:border-[#D3FB52]/50 text-zinc-400 hover:text-[#D3FB52] rounded-lg transition-all" title="Ver Expediente Detallado (Nueva Pestaña)" target="_blank">
                                                     <Eye className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={() => handleOpenPasswordModal(user)} className="p-2 bg-[#0D1310] hover:bg-[#1C2721] border border-[#1C2721] hover:border-yellow-900/50 text-yellow-600 hover:text-yellow-400 rounded-lg transition-all" title="Forzar Reseteo de Contraseña">
-                                                    <Key className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={() => handleOpenEditModal(user)} className="p-2 bg-[#0D1310] hover:bg-[#1C2721] border border-[#1C2721] hover:border-[#2A3B32] text-zinc-400 hover:text-white rounded-lg transition-all" title="Editar Expediente">
+                                                </Link>
+                                                <button onClick={() => handleOpenEditModal(user)} className="p-2 bg-[#0D1310] hover:bg-[#1C2721] border border-[#1C2721] hover:border-[#2A3B32] text-zinc-400 hover:text-white rounded-lg transition-all" title="Editar Rol Básicomente">
                                                     <Edit className="w-4 h-4" />
                                                 </button>
                                                 {user.estado !== 'inactivo' && (
@@ -407,89 +384,6 @@ export default function UsuariosPage() {
                         </button>
                         <button onClick={handleSaveUser} className="px-4 py-2 bg-[#D3FB52] hover:bg-[#bceb3b] text-black font-semibold rounded-lg transition-colors">
                             Confirmar Base de Datos
-                        </button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Modal: View Details */}
-            <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-                <DialogContent className="bg-[#0D1310] border-[#1C2721] text-white sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl flex items-center gap-2 border-b border-[#1C2721] pb-4">
-                            <Fingerprint className="w-5 h-5 text-[#D3FB52]" /> Auditoría de Usuario Registrado
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    {selectedUser && (
-                        <div className="space-y-6 py-4">
-                            <div className="flex items-center gap-4 bg-[#141C18] border border-[#1C2721] p-4 rounded-xl">
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold ${selectedUser.role === 'admin' ? 'bg-[#D3FB52]/20 text-[#D3FB52]' : 'bg-blue-500/20 text-blue-400'}`}>
-                                    {selectedUser.full_name.charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white">{selectedUser.full_name}</h3>
-                                    <div className="text-zinc-500 text-sm font-mono mt-1">UUID Arquitectónico: #{selectedUser.id}</div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1 font-semibold flex flex-row items-center gap-2"><Mail className="w-3 h-3"/> Buzón Principal</div>
-                                    <div className="bg-[#141C18] p-3 rounded-lg border border-[#1C2721] text-zinc-300">{selectedUser.email}</div>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="w-1/2">
-                                        <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1 font-semibold flex flex-row items-center gap-2"><Shield className="w-3 h-3"/> Jerarquía de Poder</div>
-                                        <div className={`p-3 rounded-lg border flex items-center justify-between ${selectedUser.role === 'admin' ? 'bg-[#D3FB52]/5 border-[#D3FB52]/20 text-[#D3FB52]' : 'bg-blue-500/5 border-blue-500/20 text-blue-400'}`}>
-                                            <span className="font-medium capitalize">{selectedUser.role === 'admin' ? 'Root Administrador' : 'Estudiante Cliente'}</span>
-                                        </div>
-                                    </div>
-                                    <div className="w-1/2">
-                                        <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1 font-semibold flex flex-row items-center gap-2">Estado JWT Server</div>
-                                        <div className={`p-3 rounded-lg border flex items-center justify-between ${selectedUser.estado === 'activo' || !selectedUser.estado ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-red-500/5 border-red-500/20 text-red-400'}`}>
-                                            <span className="font-medium capitalize">{selectedUser.estado || 'Activo'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            {/* Modal: Passwords Override */}
-            <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
-                <DialogContent className="bg-[#0D1310] border-yellow-900/50 text-white sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl flex items-center gap-2 text-yellow-500">
-                            <Key className="w-5 h-5 text-yellow-500" /> Operación de Máximo Privilegio
-                        </DialogTitle>
-                        <DialogDescription className="text-zinc-400">
-                            Atención Administrador: Usted está a punto de sobrescribir permanentemente la clave de <strong className="text-white">{selectedUser?.full_name}</strong> sin verificación de contraseña antigua. Ingrese el nuevo token de acceso a continuación.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-4 my-4">
-                        <div className="space-y-3">
-                            <label className="block text-sm font-medium text-yellow-500 flex items-center gap-2"><Lock className="w-4 h-4" /> Nuevo Token Criptográfico (Password)</label>
-                            <input 
-                                type="text" 
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Escribe la nueva contraseña aquí..."
-                                className="w-full bg-[#141C18] border border-yellow-900/30 p-3 rounded-lg text-white outline-none focus:border-yellow-500 focus:shadow-[0_0_15px_rgba(234,179,8,0.15)] transition-all font-mono"
-                            />
-                            <p className="text-xs text-yellow-700/80">Esta cadena se encriptará unidireccionalmente en la base de datos usando 10 salts en el motor bcrypt.</p>
-                        </div>
-                    </div>
-
-                    <DialogFooter>
-                        <button onClick={() => setIsPasswordModalOpen(false)} className="px-4 py-2 bg-transparent text-zinc-500 hover:text-white transition-colors">
-                            Abortar Operación
-                        </button>
-                        <button onClick={handleExecutePasswordReset} className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-semibold rounded-lg transition-colors shadow-[0_0_15px_rgba(234,179,8,0.2)]">
-                            Ejecutar Modificación Física
                         </button>
                     </DialogFooter>
                 </DialogContent>

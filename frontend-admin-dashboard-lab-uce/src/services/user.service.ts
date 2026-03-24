@@ -18,6 +18,14 @@ class UserServiceFacade {
     }
 
     /**
+     * Retrieves a single user profile.
+     * GET /users/:id
+     */
+    async getUser(id: number): Promise<User> {
+        return api.get<User>(`/users/${id}`);
+    }
+
+    /**
      * Create a new user.
      * POST /users
      */
