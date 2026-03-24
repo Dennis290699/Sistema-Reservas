@@ -17,6 +17,7 @@ export interface Reservation {
     estado: string;
     lab_nombre?: string;
     user_nombre?: string;
+    user_email?: string;
 }
 
 export interface AvailabilityRequest {

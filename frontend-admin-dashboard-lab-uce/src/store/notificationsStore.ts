@@ -5,6 +5,8 @@ interface NotificationState {
     notifications: Reservation[];
     unreadCount: number;
     addNotifications: (newReservations: Reservation[]) => void;
+    removeNotification: (id: number) => void;
+    clearAllNotifications: () => void;
     clearUnread: () => void;
 }
 
@@ -24,5 +26,9 @@ export const useNotificationStore = create<NotificationState>((set) => ({
             unreadCount: state.unreadCount + uniqueNew.length,
         };
     }),
+    removeNotification: (id) => set((state) => ({
+        notifications: state.notifications.filter(n => n.id !== id)
+    })),
+    clearAllNotifications: () => set({ notifications: [] }),
     clearUnread: () => set({ unreadCount: 0 }),
 }));

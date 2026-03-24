@@ -16,6 +16,7 @@ export interface Reservation {
     materia: string;
     creado_en: Date;
     user_nombre?: string;
+    user_email?: string;
     lab_nombre?: string;
 }
 
@@ -80,7 +81,7 @@ export const getReservationsByUser = async (userId: number): Promise<Reservation
 
 export const getAllReservations = async (): Promise<Reservation[]> => {
     const result = await pool.query(
-        `SELECT r.id, r.lab_id, r.user_id, TO_CHAR(r.fecha, 'YYYY-MM-DD') as fecha, r.hora_inicio, r.materia, r.creado_en, l.nombre as lab_nombre, u.full_name as user_nombre 
+        `SELECT r.id, r.lab_id, r.user_id, TO_CHAR(r.fecha, 'YYYY-MM-DD') as fecha, r.hora_inicio, r.materia, r.creado_en, l.nombre as lab_nombre, u.full_name as user_nombre, u.email as user_email 
          FROM reservas r 
          JOIN laboratorios l ON r.lab_id = l.id 
          JOIN users u ON r.user_id = u.id

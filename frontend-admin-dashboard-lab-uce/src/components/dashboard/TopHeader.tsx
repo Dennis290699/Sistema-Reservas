@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Settings, Bell } from "lucide-react";
+import { Settings, Bell, X, Trash2, History } from "lucide-react";
 import { toast } from "sonner";
 import { AuthService, AuthResponse } from "@/services/auth.service";
 import { useNotificationStore } from "@/store/notificationsStore";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import Link from "next/link";
 
 export function TopHeader() {
     const [user, setUser] = useState<AuthResponse['user'] | null>(null);
-    const { notifications, unreadCount, clearUnread } = useNotificationStore();
+    const { notifications, unreadCount, clearUnread, removeNotification, clearAllNotifications } = useNotificationStore();
 
     useEffect(() => {
         const currentUser = AuthService.getCurrentUser();
@@ -89,6 +90,17 @@ export function TopHeader() {
                                 <SheetDescription className="text-zinc-400">
                                     Actividad reciente del sistema de reservas.
                                 </SheetDescription>
+
+                                {notifications.length > 0 && (
+                                    <div className="flex justify-end mt-4">
+                                        <button 
+                                            onClick={clearAllNotifications}
+                                            className="text-xs flex items-center gap-1 text-zinc-500 hover:text-red-400 transition-colors"
+                                        >
+                                            <Trash2 className="w-3 h-3" /> Limpiar todo
+                                        </button>
+                                    </div>
+                                )}
                             </SheetHeader>
                             <div className="space-y-4">
                                 {notifications.length === 0 ? (
@@ -99,22 +111,29 @@ export function TopHeader() {
                                     </div>
                                 ) : (
                                     notifications.map((notif) => (
-                                        <div key={notif.id} className="p-4 rounded-xl bg-gradient-to-br from-[#1C2721] to-[#141C18] border border-[#2A3B32]">
-                                            <div className="flex justify-between items-start mb-2">
+                                        <div key={notif.id} className="p-5 rounded-2xl bg-[#141C18] border border-[#2A3B32] hover:border-[#3D5246] transition-colors relative group">
+                                            <button 
+                                                onClick={() => removeNotification(notif.id)}
+                                                className="absolute top-4 right-4 text-zinc-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0D1310] p-1.5 rounded-md border border-[#1C2721]"
+                                                title="Ocultar notificación"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                            <div className="flex justify-between items-start mb-3 pr-8">
                                                 <h4 className="font-medium text-[#D3FB52] text-sm flex items-center gap-2">
-                                                    <span className="w-2 h-2 rounded-full bg-[#D3FB52]"></span>
-                                                    Reserva Creada
+                                                    <span className="w-2 h-2 rounded-full bg-[#D3FB52] shadow-[0_0_8px_#D3FB52]"></span>
+                                                    Reserva Reciente
                                                 </h4>
                                                 <span className="text-xs font-mono text-zinc-500 bg-[#0D1310] px-2 py-1 rounded-md border border-[#1C2721]">#{notif.id}</span>
                                             </div>
-                                            <p className="text-sm text-zinc-300 mb-2 leading-relaxed">
+                                            <p className="text-sm text-zinc-300 mb-4 leading-relaxed line-clamp-2">
                                                 Materia agendada: <span className="font-semibold text-white">{notif.materia}</span>
                                             </p>
-                                            <div className="text-xs text-zinc-400 flex flex-wrap gap-2 mt-3">
-                                                <span className="bg-[#0D1310] px-2 py-1 rounded border border-[#1C2721] flex items-center gap-1">
+                                            <div className="text-xs text-zinc-400 flex flex-wrap gap-2">
+                                                <span className="bg-[#0D1310] px-2 py-1.5 rounded-lg border border-[#1C2721] flex items-center gap-1">
                                                     <span className="text-zinc-500">Lab:</span> {notif.lab_nombre || notif.lab_id}
                                                 </span>
-                                                <span className="bg-[#0D1310] px-2 py-1 rounded border border-[#1C2721] flex items-center gap-1">
+                                                <span className="bg-[#0D1310] px-2 py-1.5 rounded-lg border border-[#1C2721] flex items-center gap-1">
                                                     <span className="text-zinc-500">Fecha:</span> 
                                                     {(() => {
                                                         try {
@@ -125,7 +144,7 @@ export function TopHeader() {
                                                         }
                                                     })()}
                                                 </span>
-                                                <span className="bg-[#0D1310] px-2 py-1 rounded border border-[#1C2721] flex items-center gap-1">
+                                                <span className="bg-[#0D1310] px-2 py-1.5 rounded-lg border border-[#2A3B32] flex items-center gap-1 font-medium">
                                                     <span className="text-[#D3FB52]">Horario:</span> {notif.hora_inicio}:00
                                                 </span>
                                             </div>
@@ -133,6 +152,16 @@ export function TopHeader() {
                                     ))
                                 )}
                             </div>
+                            
+                            <SheetFooter className="mt-8 pt-6 border-t border-[#1C2721]">
+                                <Link 
+                                    href="/dashboard/historial-reservas"
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1C2721] hover:bg-[#2A3B32] text-[#D3FB52] rounded-xl transition-colors font-medium border border-[#2A3B32]"
+                                >
+                                    <History className="w-4 h-4" />
+                                    Buscador Global e Historial
+                                </Link>
+                            </SheetFooter>
                         </SheetContent>
                     </Sheet>
                 </div>

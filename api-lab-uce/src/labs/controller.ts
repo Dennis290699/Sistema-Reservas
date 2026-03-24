@@ -195,6 +195,22 @@ export const rescheduleReservation = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Missing fecha or hora_inicio parameters' });
     }
 
+    // Timezone validation
+    const nowStr = new Date().toLocaleString("en-US", { timeZone: "America/Guayaquil" });
+    const now = new Date(nowStr);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const parts = fecha.split('-');
+    const newDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+
+    if (newDate.getTime() < today.getTime()) {
+        return res.status(400).json({ error: 'No puedes reagendar una reserva hacia un día pasado.' });
+    }
+    
+    if (newDate.getTime() === today.getTime() && Number(hora_inicio) <= now.getHours()) {
+        return res.status(400).json({ error: 'No puedes reagendar para una hora que ya finalizó o está en curso.' });
+    }
+
     try {
         const result = await import('./db').then(m => m.updateReservationTime(Number(id), fecha, Number(hora_inicio)));
         if (!result) {

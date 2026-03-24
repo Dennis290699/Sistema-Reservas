@@ -5,10 +5,11 @@ import { TopHeader } from "@/components/dashboard/TopHeader";
 import { LabService, Lab, Reservation } from "@/services/lab.service";
 import { AuthService } from "@/services/auth.service";
 import { motion, Variants } from "framer-motion";
-import { Calendar, MonitorPlay, Activity, Clock, Layers, Users, CheckCircle, Eye, Edit } from "lucide-react";
+import { Calendar, MonitorPlay, Activity, Clock, Layers, Users, CheckCircle, Eye, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNotificationStore } from "@/store/notificationsStore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import Link from "next/link";
 
 export default function InicioPage() {
     const [labs, setLabs] = useState<Lab[]>([]);
@@ -107,6 +108,17 @@ export default function InicioPage() {
         }
     };
 
+    const handleDeleteReservation = async (id: number) => {
+        if (!window.confirm("¿Estás seguro de que deseas cancelar esta reserva? Esta acción no se puede deshacer.")) return;
+        try {
+            await LabService.cancelReservation(id);
+            toast.success("Reserva cancelada y eliminada del sistema.");
+            fetchDashboardData(true);
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Error al cancelar la reserva.");
+        }
+    };
+
     useEffect(() => {
         const user = AuthService.getCurrentUser();
         if (user && user.nombre) {
@@ -200,7 +212,7 @@ export default function InicioPage() {
                                     </div>
                                 </button>
 
-                                <button className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-all hover:translate-y-[-2px] text-left">
+                                <Link href="/dashboard/labs" className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-all hover:translate-y-[-2px] text-left block">
                                     <div className="flex items-center justify-between mb-4 w-full">
                                         <div className="p-3 bg-[#0D1310] rounded-xl border border-[#2A3B32]">
                                             <MonitorPlay className="text-zinc-400 group-hover:text-white transition-colors w-6 h-6" />
@@ -210,9 +222,9 @@ export default function InicioPage() {
                                         <h3 className="text-xl font-bold text-white mb-1">Laboratorios</h3>
                                         <p className="text-sm font-normal text-zinc-500 line-clamp-2">Administrar {labs.length} laboratorios y su equipamiento</p>
                                     </div>
-                                </button>
+                                </Link>
 
-                                <button className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-all hover:translate-y-[-2px] text-left">
+                                <Link href="/dashboard/usuarios" className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-all hover:translate-y-[-2px] text-left block">
                                     <div className="flex items-center justify-between mb-4 w-full">
                                         <div className="p-3 bg-[#0D1310] rounded-xl border border-[#2A3B32]">
                                             <Users className="text-zinc-400 group-hover:text-white transition-colors w-6 h-6" />
@@ -222,7 +234,7 @@ export default function InicioPage() {
                                         <h3 className="text-xl font-bold text-white mb-1">Directorio Usuarios</h3>
                                         <p className="text-sm font-normal text-zinc-500 line-clamp-2">Administrar accesos, roles y cuentas del alumnado</p>
                                     </div>
-                                </button>
+                                </Link>
                             </div>
 
                             {/* Recent Activity Table */}
@@ -313,6 +325,13 @@ export default function InicioPage() {
                                                                 >
                                                                     <Edit className="w-4 h-4" />
                                                                 </button>
+                                                                <button 
+                                                                    onClick={() => handleDeleteReservation(res.id)}
+                                                                    className="p-2 bg-[#1C2721] hover:bg-red-950 text-zinc-400 hover:text-red-400 rounded-lg transition-colors border border-[#2A3B32] hover:border-red-900"
+                                                                    title="Cancelar reserva"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </motion.tr>
@@ -344,6 +363,7 @@ export default function InicioPage() {
                                 <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">Información del Solicitante</h3>
                                 <div className="space-y-2">
                                     <p className="flex justify-between"><span className="text-zinc-400">Nombre:</span> <span className="font-semibold">{selectedReservation.user_nombre || 'Desconocido'}</span></p>
+                                    <p className="flex justify-between"><span className="text-zinc-400">Correo Electrónico:</span> <span className="text-zinc-300">{selectedReservation.user_email || 'No proporcionado'}</span></p>
                                     <p className="flex justify-between"><span className="text-zinc-400">ID Usuario:</span> <span>#{selectedReservation.user_id}</span></p>
                                     <p className="flex justify-between"><span className="text-zinc-400">ID Reserva:</span> <span className="font-mono text-[#D3FB52]">#{selectedReservation.id}</span></p>
                                 </div>
@@ -389,6 +409,7 @@ export default function InicioPage() {
                                 <input 
                                     type="date" 
                                     value={rescheduleDate}
+                                    min={new Date().toLocaleDateString('en-CA')}
                                     onChange={(e) => setRescheduleDate(e.target.value)}
                                     className="w-full bg-[#141C18] border border-[#2A3B32] p-3 rounded-lg text-white outline-none focus:border-[#D3FB52] transition-colors"
                                 />
