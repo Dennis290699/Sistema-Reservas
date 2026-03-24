@@ -16,9 +16,11 @@ export default function UsuariosPage() {
 
     // Modal States
     const [isCreateEditModalOpen, setIsCreateEditModalOpen] = useState(false);
+    const [isDisableModalOpen, setIsDisableModalOpen] = useState(false);
     
     // Active User Selection
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [userToDisable, setUserToDisable] = useState<User | null>(null);
 
     // Form States
     const [formData, setFormData] = useState({
@@ -144,22 +146,28 @@ export default function UsuariosPage() {
         }
     };
 
-    // Handler para Trash (Soft Disable)
-    const handleDisableUser = async (user: User) => {
-        if (!window.confirm(`¿Estás seguro que deseas INHABILITAR de por vida el acceso a la cuenta de ${user.full_name}? (Se mantendrá en el historial pero su sesión morirá).`)) return;
+    // Handler para Trash (Soft Disable) Modal Prompt
+    const promptDisableUser = (user: User) => {
+        setUserToDisable(user);
+        setIsDisableModalOpen(true);
+    };
+
+    const confirmDisableUser = async () => {
+        if (!userToDisable) return;
+        setIsDisableModalOpen(false);
         
         try {
             // Reutilizamos el endpoint update para inyectar "inactivo"
-            await UserService.updateUser(user.id, {
-                full_name: user.full_name,
-                email: user.email,
-                role: user.role,
+            await UserService.updateUser(userToDisable.id, {
+                full_name: userToDisable.full_name,
+                email: userToDisable.email,
+                role: userToDisable.role,
                 estado: "inactivo"
             });
-            toast.success("Cuenta inhabilitada exitosamente.");
+            toast.success("Acceso restringido. Cuenta inhabilitada exitosamente.");
             fetchData();
         } catch (error: any) {
-            toast.error("Error al inhabilitar la cuenta.");
+            toast.error("Error al inhabilitar la cuenta de usuario.");
         }
     };
 
@@ -313,7 +321,7 @@ export default function UsuariosPage() {
                                                     <Edit className="w-4 h-4" />
                                                 </button>
                                                 {user.estado !== 'inactivo' && (
-                                                    <button onClick={() => handleDisableUser(user)} className="p-2 bg-[#0D1310] hover:bg-red-950/50 border border-[#1C2721] hover:border-red-900/50 text-red-900 hover:text-red-400 rounded-lg transition-all" title="Inhabilitar Acceso Logico">
+                                                    <button onClick={() => promptDisableUser(user)} className="p-2 bg-[#0D1310] hover:bg-red-950/50 border border-[#1C2721] hover:border-red-900/50 text-red-900 hover:text-red-400 rounded-lg transition-all" title="Inhabilitar Acceso Logico">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 )}
@@ -412,6 +420,35 @@ export default function UsuariosPage() {
                         </button>
                         <button onClick={handleSaveUser} className="px-4 py-2 bg-[#D3FB52] hover:bg-[#bceb3b] text-black font-semibold rounded-lg transition-colors">
                             Confirmar Base de Datos
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal: Confirmación de Inhabilitación Fuerte */}
+            <Dialog open={isDisableModalOpen} onOpenChange={setIsDisableModalOpen}>
+                <DialogContent className="bg-[#0D1310] border-red-900/50 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2 text-red-500">
+                            <ShieldAlert className="w-6 h-6" /> Revocar Accesos del Sistema
+                        </DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            ¿Estás seguro que deseas <strong className="text-red-400">INHABILITAR</strong> categóricamente la cuenta de <strong>{userToDisable?.full_name}</strong>?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="bg-red-950/20 border border-red-900/30 p-4 rounded-xl mt-4 mb-2">
+                        <p className="text-sm text-red-200/70">
+                            Esta acción cortocircuitará los tokens de autenticación para el usuario seleccionado. Su historial de reservas se mantendrá intacto por motivos de auditoría, pero no podrá iniciar sesión en la aplicación de reservas bajo ninguna circunstancia.
+                        </p>
+                    </div>
+
+                    <DialogFooter className="mt-4">
+                        <button onClick={() => setIsDisableModalOpen(false)} className="px-4 py-2 bg-transparent text-zinc-400 hover:text-white transition-colors">
+                            Cancelar Aborto
+                        </button>
+                        <button onClick={confirmDisableUser} className="px-4 py-2 bg-red-900 hover:bg-red-800 text-white font-semibold rounded-lg transition-colors border border-red-800/50">
+                            Inhabilitar de Inmediato
                         </button>
                     </DialogFooter>
                 </DialogContent>

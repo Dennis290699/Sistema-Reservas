@@ -9,6 +9,7 @@ export interface User {
     email: string;
     password_hash: string;
     role: Role;
+    estado?: string;
 }
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {

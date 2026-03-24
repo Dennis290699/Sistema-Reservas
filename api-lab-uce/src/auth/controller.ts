@@ -32,6 +32,12 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // --- NEW AUTHORIZATION CHECK ---
+        // If the user's state was toggled to inactive by an Administrator, block entry unconditionally
+        if (user.estado === 'inactivo') {
+            return res.status(403).json({ error: 'Cuenta Inhabilitada. Contacte con el Administrador.' });
+        }
+
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
             JWT_SECRET,
