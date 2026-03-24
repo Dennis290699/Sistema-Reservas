@@ -82,8 +82,8 @@ export function TopHeader() {
                                 )}
                             </button>
                         </SheetTrigger>
-                        <SheetContent className="bg-[#0D1310] border-l border-[#1C2721] text-white overflow-y-auto no-scrollbar sm:max-w-md w-full">
-                            <SheetHeader className="mb-6">
+                        <SheetContent className="bg-[#0D1310] border-l border-[#1C2721] text-white overflow-y-auto no-scrollbar sm:max-w-md w-full p-6 flex flex-col">
+                            <SheetHeader className="mb-6 shrink-0">
                                 <SheetTitle className="text-white text-xl flex items-center gap-2">
                                     <Bell className="w-5 h-5 text-[#D3FB52]" /> Historial de Notificaciones
                                 </SheetTitle>
@@ -102,7 +102,7 @@ export function TopHeader() {
                                     </div>
                                 )}
                             </SheetHeader>
-                            <div className="space-y-4">
+                            <div className="space-y-4 flex-1">
                                 {notifications.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-16 text-center">
                                         <Bell className="w-12 h-12 text-zinc-700 mb-4 opacity-50" />
@@ -153,7 +153,7 @@ export function TopHeader() {
                                 )}
                             </div>
                             
-                            <SheetFooter className="mt-8 pt-6 border-t border-[#1C2721]">
+                            <SheetFooter className="mt-8 pt-6 border-t border-[#1C2721] shrink-0">
                                 <Link 
                                     href="/dashboard/historial-reservas"
                                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1C2721] hover:bg-[#2A3B32] text-[#D3FB52] rounded-xl transition-colors font-medium border border-[#2A3B32]"
