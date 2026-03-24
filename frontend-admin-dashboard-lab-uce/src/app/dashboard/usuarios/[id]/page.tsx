@@ -7,6 +7,7 @@ import { ArrowLeft, Key, Lock, Mail, Shield, ShieldAlert, Users, Fingerprint, Hi
 import { toast } from "sonner";
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function UserDetailsPage() {
     const params = useParams();
@@ -18,6 +19,7 @@ export default function UserDetailsPage() {
     const [newPassword, setNewPassword] = useState("");
     const [isResetting, setIsResetting] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -54,13 +56,16 @@ export default function UserDetailsPage() {
         }
     };
 
-    const handleToggleStatus = async () => {
-        if (!user) return;
-        const newStatus = (user.estado || 'activo') === 'activo' ? 'inactivo' : 'activo';
-        
-        if (!window.confirm(`¿Estás seguro de que deseas cambiar el estado operacional a ${newStatus.toUpperCase()}?`)) return;
+    const handleOpenStatusPrompt = () => {
+        setIsStatusModalOpen(true);
+    };
 
+    const confirmToggleStatus = async () => {
+        if (!user) return;
+        setIsStatusModalOpen(false);
         setIsUpdatingStatus(true);
+        const newStatus = (user.estado || 'activo') === 'activo' ? 'inactivo' : 'activo';
+
         try {
             const updated = await UserService.updateUser(user.id, {
                 full_name: user.full_name,
@@ -69,7 +74,7 @@ export default function UserDetailsPage() {
                 estado: newStatus
             });
             setUser(updated);
-            toast.success(`Estado del usuario actualizado a ${newStatus.toUpperCase()}`);
+            toast.success(`Estado operacional transpuesto radicalmente a ${newStatus.toUpperCase()}`);
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Error de servidor al modificar el estado.");
         } finally {
@@ -250,7 +255,7 @@ export default function UserDetailsPage() {
                         <p className="text-sm text-zinc-500 mb-6">Al inhabilitar a este usuario, su sesión será revocada y no podrá ingresar al dashboard o al pool de reservaciones de laboratorios, protegiendo así el sistema.</p>
                         
                         <button 
-                            onClick={handleToggleStatus}
+                            onClick={handleOpenStatusPrompt}
                             disabled={isUpdatingStatus}
                             className={`w-full py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${
                                 user.estado === 'activo' || !user.estado 
@@ -267,6 +272,50 @@ export default function UserDetailsPage() {
                     </motion.div>
                 </motion.div>
             </div>
+
+            {/* Modal: Confirmación de Suspensión / Reactivación */}
+            <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
+                <DialogContent className={`bg-[#0D1310] text-white border ${user.estado === 'activo' || !user.estado ? 'border-red-900/50' : 'border-emerald-900/50'}`}>
+                    <DialogHeader>
+                        <DialogTitle className={`text-xl flex items-center gap-2 ${user.estado === 'activo' || !user.estado ? 'text-red-500' : 'text-emerald-500'}`}>
+                            <ShieldAlert className="w-6 h-6" /> 
+                            {user.estado === 'activo' || !user.estado ? 'Revocar Perfil del Sistema' : 'Autorizar Perfil en Sistema'}
+                        </DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            ¿Estás firmemente seguro que deseas 
+                            <strong className={user.estado === 'activo' || !user.estado ? 'text-red-400 mx-1' : 'text-emerald-400 mx-1'}>
+                                {user.estado === 'activo' || !user.estado ? 'INHABILITAR' : 'HABILITAR'}
+                            </strong> 
+                            a la cuenta de <strong>{user.full_name}</strong>?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className={`border p-4 rounded-xl mt-4 mb-2 ${user.estado === 'activo' || !user.estado ? 'bg-red-950/20 border-red-900/30 text-red-200/70' : 'bg-emerald-950/20 border-emerald-900/30 text-emerald-200/70'}`}>
+                        <p className="text-sm">
+                            {user.estado === 'activo' || !user.estado 
+                                ? "La inhabilitación cortocircuitará los tokens y sesiones actitvas. El usuario tendrá denegado el ingreso a reservas futuras, aunque su historial persistirá."
+                                : "La habilitación regenerará sus credenciales de acceso, dándole libertad total para interactuar nuevamente con los horarios académicos y laboratorios virtuales."
+                            }
+                        </p>
+                    </div>
+
+                    <DialogFooter className="mt-4">
+                        <button onClick={() => setIsStatusModalOpen(false)} className="px-4 py-2 bg-transparent text-zinc-400 hover:text-white transition-colors">
+                            Cancelar Operación
+                        </button>
+                        <button 
+                            onClick={confirmToggleStatus} 
+                            className={`px-4 py-2 text-white font-semibold rounded-lg transition-colors border ${
+                                user.estado === 'activo' || !user.estado 
+                                    ? 'bg-red-900 hover:bg-red-800 border-red-800/50'
+                                    : 'bg-emerald-700 hover:bg-emerald-600 border-emerald-600/50'
+                            }`}
+                        >
+                            Confirmar Cambio Categórico
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
