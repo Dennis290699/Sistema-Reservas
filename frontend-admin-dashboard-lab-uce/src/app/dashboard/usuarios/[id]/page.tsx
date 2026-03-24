@@ -14,9 +14,10 @@ export default function UserDetailsPage() {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     
-    // Password reset state
+    // Password reset & state toggles
     const [newPassword, setNewPassword] = useState("");
     const [isResetting, setIsResetting] = useState(false);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -50,6 +51,29 @@ export default function UserDetailsPage() {
             toast.error(error.response?.data?.error || "Error de servidor al reescribir la contraseña.");
         } finally {
             setIsResetting(false);
+        }
+    };
+
+    const handleToggleStatus = async () => {
+        if (!user) return;
+        const newStatus = (user.estado || 'activo') === 'activo' ? 'inactivo' : 'activo';
+        
+        if (!window.confirm(`¿Estás seguro de que deseas cambiar el estado operacional a ${newStatus.toUpperCase()}?`)) return;
+
+        setIsUpdatingStatus(true);
+        try {
+            const updated = await UserService.updateUser(user.id, {
+                full_name: user.full_name,
+                email: user.email,
+                role: user.role,
+                estado: newStatus
+            });
+            setUser(updated);
+            toast.success(`Estado del usuario actualizado a ${newStatus.toUpperCase()}`);
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Error de servidor al modificar el estado.");
+        } finally {
+            setIsUpdatingStatus(false);
         }
     };
 
@@ -126,7 +150,7 @@ export default function UserDetailsPage() {
                                     {user.role === 'admin' ? 'Administrador' : 'Estudiante'}
                                 </span>
                             </div>
-                            <div className={`p-4 rounded-xl border flex flex-col items-center justify-center text-center ${user.estado === 'activo' || !user.estado ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
+                            <div className={`p-4 rounded-xl border flex flex-col items-center justify-center text-center transition-colors ${user.estado === 'activo' || !user.estado ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
                                 <Activity className={`w-6 h-6 mb-2 ${user.estado === 'activo' || !user.estado ? 'text-emerald-400' : 'text-red-400'}`} />
                                 <span className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-1">Estado de Red</span>
                                 <span className={`font-bold capitalize ${user.estado === 'activo' || !user.estado ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -210,6 +234,36 @@ export default function UserDetailsPage() {
                                 )}
                             </button>
                         </div>
+                    </motion.div>
+
+                    {/* Operational State Card */}
+                    <motion.div variants={childVariants} className="bg-[#0D1310] border border-[#1C2721] rounded-3xl p-8 mt-6">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${user.estado === 'activo' || !user.estado ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                                <Activity className={`w-6 h-6 ${user.estado === 'activo' || !user.estado ? 'text-emerald-500' : 'text-red-500'}`} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">Estado Operacional</h3>
+                                <p className="text-zinc-400 font-medium">Control severo de acceso al sistema</p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-zinc-500 mb-6">Al inhabilitar a este usuario, su sesión será revocada y no podrá ingresar al dashboard o al pool de reservaciones de laboratorios, protegiendo así el sistema.</p>
+                        
+                        <button 
+                            onClick={handleToggleStatus}
+                            disabled={isUpdatingStatus}
+                            className={`w-full py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2 ${
+                                user.estado === 'activo' || !user.estado 
+                                    ? "bg-[#141C18] border border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                    : "bg-[#141C18] border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10"
+                            }`}
+                        >
+                            {isUpdatingStatus ? (
+                                <span className="animate-spin inline-block w-5 h-5 border-[3px] border-current border-t-transparent rounded-full"></span>
+                            ) : (
+                                (user.estado || 'activo') === 'activo' ? 'Suspender Accesos (Inhabilitar)' : 'Restaurar Accesos (Activar)'
+                            )}
+                        </button>
                     </motion.div>
                 </motion.div>
             </div>

@@ -58,7 +58,7 @@ export default function UsuariosPage() {
             );
         }
         if (role !== "all") {
-            result = result.filter(u => u.role === role);
+            result = result.filter(u => (u.role || "").trim().toLowerCase() === role);
         }
         setFilteredUsers(result);
     };
@@ -278,7 +278,7 @@ export default function UsuariosPage() {
                                         </td>
                                         <td className="p-5">
                                             <div className="flex justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                <Link href={`/dashboard/usuarios/${user.id}`} className="p-2 bg-[#0D1310] hover:bg-[#D3FB52]/10 border border-[#1C2721] hover:border-[#D3FB52]/50 text-zinc-400 hover:text-[#D3FB52] rounded-lg transition-all" title="Ver Expediente Detallado (Nueva Pestaña)" target="_blank">
+                                                <Link href={`/dashboard/usuarios/${user.id}`} className="p-2 bg-[#0D1310] hover:bg-[#D3FB52]/10 border border-[#1C2721] hover:border-[#D3FB52]/50 text-zinc-400 hover:text-[#D3FB52] rounded-lg transition-all" title="Ver Expediente Detallado">
                                                     <Eye className="w-4 h-4" />
                                                 </Link>
                                                 <button onClick={() => handleOpenEditModal(user)} className="p-2 bg-[#0D1310] hover:bg-[#1C2721] border border-[#1C2721] hover:border-[#2A3B32] text-zinc-400 hover:text-white rounded-lg transition-all" title="Editar Rol Básicomente">
