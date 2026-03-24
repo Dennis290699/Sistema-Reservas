@@ -46,7 +46,10 @@ export default function LoginForm() {
             toast.success("Ingreso exitoso");
             router.push("/dashboard");
         } catch (err: unknown) {
-            toast.error((err as Error).message || "Error al iniciar sesión");
+            toast.error((err as Error).message || "Error al iniciar sesión", {
+                duration: 8000, 
+                position: "bottom-center"
+            });
         } finally {
             setIsLoading(false);
         }
