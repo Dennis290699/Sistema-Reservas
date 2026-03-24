@@ -25,6 +25,27 @@ export const getLabs = async (): Promise<Lab[]> => {
     return result.rows;
 };
 
+export const createLab = async (nombre: string, ubicacion: string, capacidad: number, estado: string): Promise<Lab> => {
+    const result = await pool.query(
+        'INSERT INTO laboratorios (nombre, ubicacion, capacidad, estado) VALUES ($1, $2, $3, $4) RETURNING *',
+        [nombre, ubicacion, capacidad, estado]
+    );
+    return result.rows[0];
+};
+
+export const updateLab = async (id: number, nombre: string, ubicacion: string, capacidad: number, estado: string): Promise<Lab | null> => {
+    const result = await pool.query(
+        'UPDATE laboratorios SET nombre = $1, ubicacion = $2, capacidad = $3, estado = $4 WHERE id = $5 RETURNING *',
+        [nombre, ubicacion, capacidad, estado, id]
+    );
+    return result.rows[0] || null;
+};
+
+export const deleteLab = async (id: number): Promise<boolean> => {
+    const result = await pool.query('DELETE FROM laboratorios WHERE id = $1', [id]);
+    return (result.rowCount ?? 0) > 0;
+};
+
 export const getReservationsByDateAndLab = async (date: string, labId: number): Promise<Reservation[]> => {
     const result = await pool.query(
         'SELECT * FROM reservas WHERE fecha = $1 AND lab_id = $2',

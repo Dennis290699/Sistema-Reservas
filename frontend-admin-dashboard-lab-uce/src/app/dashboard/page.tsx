@@ -76,7 +76,7 @@ export default function InicioPage() {
                 const previousCount = store.unreadCount;
                 store.addNotifications(reservationsData);
                 const newCount = useNotificationStore.getState().unreadCount;
-                
+
                 if (newCount > previousCount) {
                     const diff = newCount - previousCount;
                     toast.success(`Tienes ${diff} ${diff === 1 ? 'nueva reserva' : 'nuevas reservas'}`, {
@@ -97,7 +97,7 @@ export default function InicioPage() {
 
     const handleRescheduleSubmit = async () => {
         if (!selectedReservation || !rescheduleDate || !rescheduleTime) return;
-        
+
         try {
             await LabService.rescheduleReservation(selectedReservation.id, rescheduleDate, Number(rescheduleTime));
             toast.success("Reserva modificada exitosamente.");
@@ -136,11 +136,11 @@ export default function InicioPage() {
         return () => clearInterval(intervalId);
     }, []);
 
-    const currentDate = new Intl.DateTimeFormat('es-ES', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+    const currentDate = new Intl.DateTimeFormat('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
     }).format(new Date());
 
     const containerVariants: Variants = {
@@ -162,9 +162,9 @@ export default function InicioPage() {
 
             <div className="flex flex-1 overflow-hidden pb-4">
                 <div className="flex-1 overflow-y-auto no-scrollbar h-full rounded-3xl bg-[#0D1310] border border-[#1C2721] p-8 shadow-xl">
-                    
+
                     {/* Welcome Banner */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
@@ -172,7 +172,7 @@ export default function InicioPage() {
                     >
                         <div>
                             <p className="text-zinc-400 font-light flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-[#D3FB52]" /> 
+                                <Calendar className="w-5 h-5 text-[#D3FB52]" />
                                 <span className="capitalize text-lg text-white font-medium">{currentDate}</span>
                             </p>
                         </div>
@@ -192,7 +192,7 @@ export default function InicioPage() {
                             <p className="text-zinc-500">Sincronizando sistema...</p>
                         </div>
                     ) : (
-                        <motion.div 
+                        <motion.div
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"
@@ -212,7 +212,7 @@ export default function InicioPage() {
                                     </div>
                                 </button>
 
-                                <Link href="/dashboard/labs" className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-all hover:translate-y-[-2px] text-left block">
+                                <Link href="/dashboard/laboratorios" className="bg-gradient-to-br from-[#1C2721] to-[#141C18] p-6 rounded-2xl border border-[#2A3B32] shadow-lg flex flex-col justify-between group hover:border-[#3D5246] transition-all hover:translate-y-[-2px] text-left block">
                                     <div className="flex items-center justify-between mb-4 w-full">
                                         <div className="p-3 bg-[#0D1310] rounded-xl border border-[#2A3B32]">
                                             <MonitorPlay className="text-zinc-400 group-hover:text-white transition-colors w-6 h-6" />
@@ -248,7 +248,7 @@ export default function InicioPage() {
                                         Actualización en tiempo real
                                     </span>
                                 </div>
-                                
+
                                 {recentUpcoming.length === 0 ? (
                                     <div className="p-12 text-center flex flex-col items-center">
                                         <Calendar className="w-12 h-12 text-zinc-700 mb-4" />
@@ -269,11 +269,11 @@ export default function InicioPage() {
                                             </thead>
                                             <tbody className="divide-y divide-[#1C2721]">
                                                 {recentUpcoming.map((res, i) => (
-                                                    <motion.tr 
+                                                    <motion.tr
                                                         initial={{ opacity: 0, x: -10 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         transition={{ delay: i * 0.1 }}
-                                                        key={`${res.id}-${i}`} 
+                                                        key={`${res.id}-${i}`}
                                                         className="hover:bg-[#1C2721]/30 transition-colors group"
                                                     >
                                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -303,7 +303,7 @@ export default function InicioPage() {
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                                             <div className="flex items-center justify-end gap-2">
-                                                                <button 
+                                                                <button
                                                                     onClick={() => {
                                                                         setSelectedReservation(res);
                                                                         setViewModalOpen(true);
@@ -313,7 +313,7 @@ export default function InicioPage() {
                                                                 >
                                                                     <Eye className="w-4 h-4" />
                                                                 </button>
-                                                                <button 
+                                                                <button
                                                                     onClick={() => {
                                                                         setSelectedReservation(res);
                                                                         setRescheduleDate(String(res.fecha).split('T')[0]);
@@ -325,7 +325,7 @@ export default function InicioPage() {
                                                                 >
                                                                     <Edit className="w-4 h-4" />
                                                                 </button>
-                                                                <button 
+                                                                <button
                                                                     onClick={() => handleDeleteReservation(res.id)}
                                                                     className="p-2 bg-[#1C2721] hover:bg-red-950 text-zinc-400 hover:text-red-400 rounded-lg transition-colors border border-[#2A3B32] hover:border-red-900"
                                                                     title="Cancelar reserva"
@@ -403,11 +403,11 @@ export default function InicioPage() {
                             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                                 <p className="text-xs text-red-400">Asegúrate de coordinar este cambio con el alumno previamente para evitar conflictos de horario.</p>
                             </div>
-                            
+
                             <div className="space-y-3">
                                 <label className="block text-sm font-medium text-zinc-300">Nueva Fecha</label>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="date"
                                     value={rescheduleDate}
                                     min={new Date().toLocaleDateString('en-CA')}
                                     onChange={(e) => setRescheduleDate(e.target.value)}
@@ -417,7 +417,7 @@ export default function InicioPage() {
 
                             <div className="space-y-3">
                                 <label className="block text-sm font-medium text-zinc-300">Nueva Hora de Inicio</label>
-                                <select 
+                                <select
                                     value={rescheduleTime}
                                     onChange={(e) => setRescheduleTime(Number(e.target.value))}
                                     className="w-full bg-[#141C18] border border-[#2A3B32] p-3 rounded-lg text-white outline-none focus:border-[#D3FB52] transition-colors"

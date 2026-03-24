@@ -5,6 +5,7 @@ export interface Lab {
     nombre: string;
     ubicacion: string;
     capacidad: number;
+    estado?: string;
 }
 
 export interface Reservation {
@@ -39,6 +40,30 @@ class LabServiceFacade {
      */
     async listLabs(): Promise<Lab[]> {
         return api.get<Lab[]>('/labs');
+    }
+
+    /**
+     * Create a new laboratory.
+     * POST /labs
+     */
+    async createLab(data: Omit<Lab, 'id'>): Promise<Lab> {
+        return api.post<Lab>('/labs', data);
+    }
+
+    /**
+     * Update an existing laboratory.
+     * PUT /labs/:id
+     */
+    async updateLab(id: number, data: Omit<Lab, 'id'>): Promise<Lab> {
+        return api.put<Lab>(`/labs/${id}`, data);
+    }
+
+    /**
+     * Delete/disable a laboratory.
+     * DELETE /labs/:id
+     */
+    async deleteLab(id: number): Promise<{ success: boolean }> {
+        return api.delete<{ success: boolean }>(`/labs/${id}`);
     }
 
     /**

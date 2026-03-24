@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getReservationsByDateAndLab, createReservations, getLabs } from './db';
+import { getReservationsByDateAndLab, createReservations, getLabs, createLab, updateLab, deleteLab } from './db';
 import { z } from 'zod';
 
 const reservationSchema = z.object({
@@ -10,6 +10,13 @@ const reservationSchema = z.object({
 });
 
 const VALID_HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+const labSchema = z.object({
+    nombre: z.string().min(3),
+    ubicacion: z.string().min(3),
+    capacidad: z.number().min(1),
+    estado: z.string().min(3)
+});
 
 export const getAvailability = async (req: Request, res: Response) => {
     const { fecha, lab_id } = req.query;
@@ -223,5 +230,45 @@ export const rescheduleReservation = async (req: Request, res: Response) => {
         }
         console.error('Update booking error:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+export const addLab = async (req: Request, res: Response) => {
+    const validation = labSchema.safeParse(req.body);
+    if (!validation.success) return res.status(400).json({ error: validation.error.errors });
+
+    try {
+        const newLab = await createLab(validation.data.nombre, validation.data.ubicacion, validation.data.capacidad, validation.data.estado);
+        res.status(201).json(newLab);
+    } catch (error) {
+        console.error('Error creating lab:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+export const editLab = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const validation = labSchema.safeParse(req.body);
+    if (!validation.success) return res.status(400).json({ error: validation.error.errors });
+
+    try {
+        const updated = await updateLab(Number(id), validation.data.nombre, validation.data.ubicacion, validation.data.capacidad, validation.data.estado);
+        if (!updated) return res.status(404).json({ error: 'Lab not found' });
+        res.json(updated);
+    } catch (error) {
+        console.error('Error updating lab:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+export const removeLab = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const deleted = await deleteLab(Number(id));
+        if (!deleted) return res.status(404).json({ error: 'Lab not found' });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting lab:', error);
+        res.status(500).json({ error: 'No se puede eliminar un laboratorio con reservas existentes. Desactívelo.' });
     }
 };

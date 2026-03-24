@@ -1,11 +1,16 @@
 import { Router } from 'express';
-import { getAvailability, createBooking, listLabs, getUserReservations, cancelReservation, getAllReservations, rescheduleReservation } from './controller';
+import { getAvailability, createBooking, listLabs, getUserReservations, cancelReservation, getAllReservations, rescheduleReservation, addLab, editLab, removeLab } from './controller';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
-// Lab availability & booking
+// Lab management routes
 router.get('/', listLabs);
+router.post('/', authenticateToken, addLab);
+router.put('/:id', authenticateToken, editLab);
+router.delete('/:id', authenticateToken, removeLab);
+
+// Lab availability & booking
 router.get('/disponibilidad', authenticateToken, getAvailability);
 router.post('/reservar', authenticateToken, createBooking);
 
