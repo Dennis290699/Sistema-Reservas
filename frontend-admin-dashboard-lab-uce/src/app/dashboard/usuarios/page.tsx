@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { UserService, User } from "@/services/user.service";
 import { motion, Variants } from "framer-motion";
 import { Search, Users, Shield, Key, Trash2, Edit, ArrowLeft, Plus, Eye, Mail, Fingerprint, Lock, ShieldAlert } from "lucide-react";
@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 export default function UsuariosPage() {
     const [users, setUsers] = useState<User[]>([]);
-    const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("all");
@@ -35,7 +34,6 @@ export default function UsuariosPage() {
             setIsLoading(true);
             const data = await UserService.listUsers();
             setUsers(data);
-            applyFilters(data, searchTerm, roleFilter);
         } catch (error) {
             console.error("Error loading users:", error);
             toast.error("Error crítico al extraer el directorio de usuarios");
@@ -48,24 +46,28 @@ export default function UsuariosPage() {
         fetchData();
     }, []);
 
-    const applyFilters = (source: User[], search: string, role: string) => {
-        let result = source;
-        if (search.trim() !== "") {
-            const term = search.toLowerCase();
+    const filteredUsers = useMemo(() => {
+        let result = users;
+        if (searchTerm.trim() !== "") {
+            const term = searchTerm.toLowerCase();
             result = result.filter(u => 
                 (u.full_name || "").toLowerCase().includes(term) ||
                 (u.email || "").toLowerCase().includes(term)
             );
         }
-        if (role !== "all") {
-            result = result.filter(u => (u.role || "").trim().toLowerCase() === role);
+        if (roleFilter !== "all") {
+            result = result.filter(u => (u.role || "").trim().toLowerCase() === roleFilter);
         }
-        setFilteredUsers(result);
-    };
+        return result;
+    }, [users, searchTerm, roleFilter]);
 
-    useEffect(() => {
-        applyFilters(users, searchTerm, roleFilter);
-    }, [searchTerm, roleFilter, users]);
+    const stats = useMemo(() => {
+        return {
+            all: users.length,
+            admins: users.filter(u => (u.role || "").trim().toLowerCase() === 'admin').length,
+            students: users.filter(u => (u.role || "").trim().toLowerCase() === 'student').length
+        };
+    }, [users]);
 
     // Handlers para Create/Edit
     const handleOpenCreateModal = () => {
@@ -189,22 +191,28 @@ export default function UsuariosPage() {
                     
                     <div className="flex bg-[#141C18] border border-[#2A3B32] p-1 rounded-2xl md:w-auto w-full shrink-0">
                         <button 
+                            type="button"
                             onClick={() => setRoleFilter("all")}
                             className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'all' ? 'bg-[#2A3B32] text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300'}`}
                         >
                             <Users className="w-4 h-4" /> Todos
+                            <span className="ml-1 px-2 py-0.5 rounded-full bg-black/30 text-xs">{stats.all}</span>
                         </button>
                         <button 
+                            type="button"
                             onClick={() => setRoleFilter("admin")}
                             className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'admin' ? 'bg-[#D3FB52]/20 text-[#D3FB52] shadow-md border border-[#D3FB52]/10' : 'text-zinc-500 hover:text-zinc-300'}`}
                         >
                             <ShieldAlert className="w-4 h-4" /> Admins
+                            <span className="ml-1 px-2 py-0.5 rounded-full bg-black/30 text-xs">{stats.admins}</span>
                         </button>
                         <button 
+                            type="button"
                             onClick={() => setRoleFilter("student")}
                             className={`flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${roleFilter === 'student' ? 'bg-blue-500/20 text-blue-400 shadow-md border border-blue-500/10' : 'text-zinc-500 hover:text-zinc-300'}`}
                         >
                             <Users className="w-4 h-4" /> Estudiantes
+                            <span className="ml-1 px-2 py-0.5 rounded-full bg-black/30 text-xs">{stats.students}</span>
                         </button>
                     </div>
                 </div>
